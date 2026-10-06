@@ -2,13 +2,65 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Chatbot from "@/components/ui/Chatbot";
+import { LanguageProvider } from "@/lib/LanguageContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
+// ==========================================
+// GOOGLE SEARCH CONSOLE & SEO MASTER TAGS
+// ==========================================
 export const metadata: Metadata = {
-  title: "NORVARA | Real Digital Wealth Systems by A. Nova",
+  title: {
+    default: "NORVARA | How to Make Money Online Selling PDFs & Courses",
+    template: "%s | NORVARA",
+  },
   description:
-    "Official website of Ahmad Suleiman Baraya (A. Nova). Practical digital product guides and video courses built from real hands-on experience.",
+    "Learn how to make money online in Nigeria. A. Nova shares the exact side hustle blueprint to sell digital PDFs and video courses using just a smartphone.",
+  keywords: [
+    "how to make money online",
+    "pdf selling online",
+    "how to do side hustles",
+    "make money online in Nigeria",
+    "Ahmad Suleiman Baraya",
+    "A Nova",
+    "digital products side hustle",
+    "make money with smartphone",
+    "sell ebooks online",
+  ],
+  authors: [{ name: "Ahmad Suleiman Baraya (A. Nova)" }],
+  creator: "A. Nova",
+  metadataBase: new URL("https://norvara.com.ng"),
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_NG",
+    url: "https://norvara.com.ng",
+    title: "NORVARA | Start Your Digital Side Hustle Today",
+    description: "The practical blueprint to selling PDFs and courses online with zero capital. Built from real proof.",
+    siteName: "Norvara",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "NORVARA | Make Money Online Selling Digital Products",
+    description: "Step-by-step side hustle guide to selling PDFs using a ₦39,000 phone.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  // NOTE: Replace "YOUR_GOOGLE_VERIFICATION_CODE" with the string Google gives you
+  verification: {
+    google: "YOUR_GOOGLE_VERIFICATION_CODE",
+  },
 };
 
 export default function RootLayout({
@@ -19,8 +71,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.className} bg-slate-950 text-slate-100 antialiased`}>
-        {children}
-        <Chatbot />
+        <LanguageProvider>
+          {children}
+          <Chatbot />
+        </LanguageProvider>
       </body>
     </html>
   );
