@@ -10,12 +10,16 @@ const inter = Inter({ subsets: ["latin"] });
 // GOOGLE SEARCH CONSOLE & SEO MASTER TAGS
 // ==========================================
 export const metadata: Metadata = {
+  metadataBase: new URL("https://norvara.com.ng"),
+
   title: {
     default: "NORVARA | How to Make Money Online Selling PDFs & Courses",
     template: "%s | NORVARA",
   },
+
   description:
     "Learn how to make money online in Nigeria. A. Nova shares the exact side hustle blueprint to sell digital PDFs and video courses using just a smartphone.",
+
   keywords: [
     "how to make money online",
     "pdf selling online",
@@ -27,28 +31,49 @@ export const metadata: Metadata = {
     "make money with smartphone",
     "sell ebooks online",
   ],
-  authors: [{ name: "Ahmad Suleiman Baraya (A. Nova)" }],
+
+  authors: [
+    {
+      name: "Ahmad Suleiman Baraya (A. Nova)",
+    },
+  ],
+
   creator: "A. Nova",
-  metadataBase: new URL("https://norvara.com.ng"),
+
   alternates: {
     canonical: "/",
   },
+
+  // ==========================================
+  // OPEN GRAPH
+  // ==========================================
   openGraph: {
     type: "website",
     locale: "en_NG",
     url: "https://norvara.com.ng",
     title: "NORVARA | Start Your Digital Side Hustle Today",
-    description: "The practical blueprint to selling PDFs and courses online with zero capital. Built from real proof.",
+    description:
+      "The practical blueprint to selling PDFs and courses online with zero capital. Built from real proof.",
     siteName: "Norvara",
   },
+
+  // ==========================================
+  // TWITTER / X
+  // ==========================================
   twitter: {
     card: "summary_large_image",
     title: "NORVARA | Make Money Online Selling Digital Products",
-    description: "Step-by-step side hustle guide to selling PDFs using a ₦39,000 phone.",
+    description:
+      "Step-by-step side hustle guide to selling PDFs using a ₦39,000 phone.",
   },
+
+  // ==========================================
+  // ROBOTS
+  // ==========================================
   robots: {
     index: true,
     follow: true,
+
     googleBot: {
       index: true,
       follow: true,
@@ -57,12 +82,33 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  // NOTE: Replace "YOUR_GOOGLE_VERIFICATION_CODE" with the string Google gives you
+
+  // ==========================================
+  // GOOGLE SEARCH CONSOLE
+  // ==========================================
   verification: {
     google: "YOUR_GOOGLE_VERIFICATION_CODE",
   },
+
+  // ==========================================
+  // PWA / MOBILE
+  // ==========================================
+  manifest: "/manifest.json",
+
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Norvara",
+  },
+
+  formatDetection: {
+    telephone: false,
+  },
 };
 
+// ==========================================
+// ROOT LAYOUT
+// ==========================================
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -70,7 +116,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} bg-slate-950 text-slate-100 antialiased`}>
+      <body
+        className={`${inter.className} bg-slate-950 text-slate-100 antialiased`}
+      >
         <LanguageProvider>
           {children}
           <Chatbot />

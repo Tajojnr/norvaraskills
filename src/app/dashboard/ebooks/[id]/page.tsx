@@ -1,27 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useLanguage } from "@/lib/LanguageContext";
 
 const WA =
   "https://wa.me/2349034111438?text=Hi%20A.%20Nova%2C%20I%20bought%20the%20book%20and%20I%20need%20my%20file";
 
 export default function EbookAccessPage() {
-  const params = useParams();
+  const { lang } = useLanguage();
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6 font-sans">
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-8 sm:p-10 text-center space-y-6">
+      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-8 sm:p-10 text-center space-y-6 shadow-2xl">
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-widest text-emerald-400">
-            Book access
+            {lang === "en" ? "Book access" : "Sammun littafi"}
           </p>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tighter">
-            Online reader coming soon
+            {lang === "en" ? "Online reader coming soon" : "Dandalin karatu yana zuwa"}
           </h1>
           <p className="text-sm text-slate-400 font-medium leading-relaxed">
-            The secure web reader is still being connected. If you already paid,
-            message A. Nova on WhatsApp and your PDF file is sent to you directly.
+            {lang === "en"
+              ? "The secure web reader is being connected. If you already paid, message A. Nova on WhatsApp to get your file sent directly."
+              : "Ana ci gaba da haɗa dandalin karatu. Idan ka riga ka biya, yi wa A. Nova magana a WhatsApp a turo maka fayil ɗinka."}
           </p>
         </div>
 
@@ -31,15 +32,15 @@ export default function EbookAccessPage() {
           rel="noopener noreferrer"
           className="w-full inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-6 py-3.5 text-sm font-bold text-slate-950 hover:bg-emerald-400 transition-colors"
         >
-          Get my file on WhatsApp
+          {lang === "en" ? "Get my file on WhatsApp" : "Karɓi fayil dina a WhatsApp"}
         </a>
 
-        <div className="flex items-center justify-center gap-4 text-xs font-semibold text-slate-500">
-          <Link href="/dashboard" className="hover:text-white transition-colors">
-            Back to dashboard
-          </Link>
-          <Link href="/products" className="hover:text-white transition-colors">
-            View the book
+        <div className="flex items-center justify-center gap-4 text-xs font-semibold text-slate-400 border-t border-white/10 pt-4">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center justify-center rounded-xl bg-slate-800 border border-white/10 px-5 py-2.5 text-white hover:bg-slate-700 transition-colors font-bold"
+          >
+            ← {lang === "en" ? "Back to Dashboard" : "Koma Dakin Karatu"}
           </Link>
         </div>
       </div>
