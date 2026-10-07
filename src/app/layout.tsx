@@ -44,9 +44,6 @@ export const metadata: Metadata = {
     canonical: "/",
   },
 
-  // ==========================================
-  // OPEN GRAPH
-  // ==========================================
   openGraph: {
     type: "website",
     locale: "en_NG",
@@ -57,9 +54,6 @@ export const metadata: Metadata = {
     siteName: "Norvara",
   },
 
-  // ==========================================
-  // TWITTER / X
-  // ==========================================
   twitter: {
     card: "summary_large_image",
     title: "NORVARA | Make Money Online Selling Digital Products",
@@ -67,9 +61,6 @@ export const metadata: Metadata = {
       "Step-by-step side hustle guide to selling PDFs using a ₦39,000 phone.",
   },
 
-  // ==========================================
-  // ROBOTS
-  // ==========================================
   robots: {
     index: true,
     follow: true,
@@ -83,16 +74,6 @@ export const metadata: Metadata = {
     },
   },
 
-  // ==========================================
-  // GOOGLE SEARCH CONSOLE
-  // ==========================================
-  verification: {
-    google: "V5dtFV1hfvIbO6aPdYRyGhmdW3NvVGTQLL8LuyPlVH4",
-  },
-
-  // ==========================================
-  // PWA / MOBILE
-  // ==========================================
   manifest: "/manifest.json",
 
   appleWebApp: {
@@ -116,6 +97,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        {/* Direct Google Verification Tag */}
+        <meta
+          name="google-site-verification"
+          content="V5dtFV1hfvIbO6aPdYRyGhmdW3NvVGTQLL8LuyPlVH4"
+        />
+      </head>
       <body
         className={`${inter.className} bg-slate-950 text-slate-100 antialiased`}
       >
