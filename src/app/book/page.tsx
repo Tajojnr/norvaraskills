@@ -4,6 +4,7 @@
 // Images are loaded from /public/book/. Self-contained: styles are scoped under .nb and injected below.
 import { useEffect, useState } from "react";
 import Footer from "@/components/layout/Footer";
+import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 
 // Flutterwave payment links, one per tier. Set these in .env.local (sandbox) and in Vercel (live links).
 const FLW_LINKS: Record<"ng" | "africa" | "intl", string | undefined> = {
@@ -12,7 +13,7 @@ const FLW_LINKS: Record<"ng" | "africa" | "intl", string | undefined> = {
   intl: process.env.NEXT_PUBLIC_FLW_LINK_INTL,
 };
 
-// Set to "/book/founder.png" once the client sends the author photo (the block stays hidden until then).
+// Set to "/book/founder.webp" once the client sends the author photo (the block stays hidden until then).
 const FOUNDER_PHOTO: string | null = null;
 
 type Region = "ng" | "africa" | "intl";
@@ -192,8 +193,8 @@ export default function BookPage() {
   <div className="ht">STOP WAITING.<br />START BUILDING.</div>
   <div className="hs">How I Went From Nothing to My First Million — And What It Really Cost Me.</div>
   <picture className="bundle">
-    <source media="(max-width:480px)" srcSet="/book/bundle-tall.png" />
-    <img src="/book/bundle-wide.png" alt="The four books: Stop Waiting. Start Building., Find Your Idea, Create Your Digital Product, Teach Your Idea" />
+    <source media="(max-width:480px)" srcSet="/book/bundle-tall.webp" />
+    <img src="/book/bundle-wide.webp" alt="The four books: Stop Waiting. Start Building., Find Your Idea, Create Your Digital Product, Teach Your Idea" />
   </picture>
 </div>
 
@@ -225,10 +226,10 @@ export default function BookPage() {
 <div className="sec">
 <div className="label">What's inside: the four books</div>
 <div className="books">
-<div className="book"><img src="/book/cover-story.png" alt="" /><div><div className="bk">Book 1 · My story</div><div className="bt">Stop Waiting. Start Building.</div><div className="bs">How I Went From Nothing to My First Million — And What It Really Cost Me.</div><p>The full journey, from sitting under a tree to my first million-naira month. Every failure, every turning point and every lesson, told honestly, with a practical guide at the end.</p></div></div>
-<div className="book"><img src="/book/cover-idea.png" alt="" /><div><div className="bk">Book 2 · The starting guide</div><div className="bt">Find Your Idea</div><div className="bs">Turn what you already know into something people will pay for</div><p>Discover what you know that people will pay for: school knowledge, hand skills or work knowledge. Includes the AI interview that helps you choose, the Idea Checklist and your one-page Idea Sheet. Use it again for every new idea.</p></div></div>
-<div className="book"><img src="/book/cover-product.png" alt="" /><div><div className="bk">Book 3 · Path 1</div><div className="bt">Create Your Digital Product</div><div className="bs">Test it, build it, sell it</div><p>Test your idea with ads before you build it, then create it, price it, deliver it and sell it, step by step. Facebook, TikTok and Instagram ads, WhatsApp Business, Telegram channels, the calling method, getting paid from abroad, and what to do when things go wrong. Includes 10 ready-to-use tools and a 21-day plan.</p></div></div>
-<div className="book"><img src="/book/cover-teach.png" alt="" /><div><div className="bk">Book 4 · Path 2</div><div className="bt">Teach Your Idea</div><div className="bs">One-to-One or in Groups · In Person or Online · In Your Country or Abroad</div><p>Find students, teach well and get paid: house to house, online in your country, and teaching people outside your country. For school subjects and for any skill.</p></div></div>
+<div className="book"><img src="/book/cover-story.webp" alt="" /><div><div className="bk">Book 1 · My story</div><div className="bt">Stop Waiting. Start Building.</div><div className="bs">How I Went From Nothing to My First Million — And What It Really Cost Me.</div><p>The full journey, from sitting under a tree to my first million-naira month. Every failure, every turning point and every lesson, told honestly, with a practical guide at the end.</p></div></div>
+<div className="book"><img src="/book/cover-idea.webp" alt="" /><div><div className="bk">Book 2 · The starting guide</div><div className="bt">Find Your Idea</div><div className="bs">Turn what you already know into something people will pay for</div><p>Discover what you know that people will pay for: school knowledge, hand skills or work knowledge. Includes the AI interview that helps you choose, the Idea Checklist and your one-page Idea Sheet. Use it again for every new idea.</p></div></div>
+<div className="book"><img src="/book/cover-product.webp" alt="" /><div><div className="bk">Book 3 · Path 1</div><div className="bt">Create Your Digital Product</div><div className="bs">Test it, build it, sell it</div><p>Test your idea with ads before you build it, then create it, price it, deliver it and sell it, step by step. Facebook, TikTok and Instagram ads, WhatsApp Business, Telegram channels, the calling method, getting paid from abroad, and what to do when things go wrong. Includes 10 ready-to-use tools and a 21-day plan.</p></div></div>
+<div className="book"><img src="/book/cover-teach.webp" alt="" /><div><div className="bk">Book 4 · Path 2</div><div className="bt">Teach Your Idea</div><div className="bs">One-to-One or in Groups · In Person or Online · In Your Country or Abroad</div><p>Find students, teach well and get paid: house to house, online in your country, and teaching people outside your country. For school subjects and for any skill.</p></div></div>
 </div>
 </div>
 
@@ -343,12 +344,12 @@ export default function BookPage() {
           {link ? (
             <a className="cta-button" href={link} rel="noopener">Pay {c.price} securely</a>
           ) : (
-            <a className="cta-button" href={waHref} target="_blank" rel="noopener noreferrer">Order on WhatsApp · {c.price}</a>
+            <a className="cta-button" href={waHref} target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="mr-2 inline h-4 w-4" />Order on WhatsApp · {c.price}</a>
           )}
           <div className="cta-sub">🔒 Secure checkout · Instant access · 30-day money-back guarantee</div>
           {link && (
             <div className="nv-alt">
-              Prefer to order by chat? <a href={waHref} target="_blank" rel="noopener noreferrer">WhatsApp 09034111438</a>
+              Prefer to order by chat? <a href={waHref} target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="mr-1 inline h-4 w-4 align-text-bottom" />WhatsApp</a>
             </div>
           )}
         </div>

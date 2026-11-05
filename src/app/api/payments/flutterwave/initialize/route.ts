@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
         customizations: {
           title: "Norvara",
           description: product.title,
-          logo: `${base}/logo.png`,
+          logo: `${base}/logo.webp`,
         },
         meta: {
           product_id: product.id,

@@ -39,7 +39,7 @@ export default function LoginPage() {
       {/* Brand Logo Header */}
       <Link href="/" className="mb-8 flex flex-col items-center group">
         <div className="h-16 w-16 overflow-hidden rounded-full ring-1 ring-white/10 bg-slate-900 shadow-2xl mb-4 group-hover:ring-emerald-500/50 transition-all">
-          <img src="/logo.png" alt="Norvara Logo" className="h-full w-full object-contain p-1" />
+          <img src="/logo.webp" alt="Norvara Logo" className="h-full w-full object-contain p-1" />
         </div>
         <span className="text-xl font-black tracking-tight text-white leading-none">NORVARA</span>
       </Link>

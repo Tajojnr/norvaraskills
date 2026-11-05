@@ -41,10 +41,10 @@ function useRegionPrice() {
 }
 
 const BOOKS = [
-  { src: "/book/cover-story.png", w: 420, h: 675, tag: "Book 1", title: "Stop Waiting. Start Building.", alt: "Book cover: Stop Waiting. Start Building. by A. Nova" },
-  { src: "/book/cover-idea.png", w: 420, h: 761, tag: "Book 2", title: "Find Your Idea", alt: "Book cover: Find Your Idea by A. Nova" },
-  { src: "/book/cover-product.png", w: 420, h: 734, tag: "Book 3", title: "Create Your Digital Product", alt: "Book cover: Create Your Digital Product by A. Nova" },
-  { src: "/book/cover-teach.png", w: 420, h: 791, tag: "Book 4", title: "Teach Your Idea", alt: "Book cover: Teach Your Idea by A. Nova" },
+  { src: "/book/cover-story.webp", w: 420, h: 675, tag: "Book 1", title: "Stop Waiting. Start Building.", alt: "Book cover: Stop Waiting. Start Building. by A. Nova" },
+  { src: "/book/cover-idea.webp", w: 420, h: 761, tag: "Book 2", title: "Find Your Idea", alt: "Book cover: Find Your Idea by A. Nova" },
+  { src: "/book/cover-product.webp", w: 420, h: 734, tag: "Book 3", title: "Create Your Digital Product", alt: "Book cover: Create Your Digital Product by A. Nova" },
+  { src: "/book/cover-teach.webp", w: 420, h: 791, tag: "Book 4", title: "Teach Your Idea", alt: "Book cover: Teach Your Idea by A. Nova" },
 ];
 
 const COURSES = [
@@ -131,7 +131,7 @@ export default function HomeClient() {
             className="mt-14 mx-auto max-w-5xl"
           >
             <Image
-              src="/book/bundle-wide.png"
+              src="/book/bundle-wide.webp"
               alt="The four books: Stop Waiting. Start Building., Find Your Idea, Create Your Digital Product, Teach Your Idea"
               width={1400}
               height={788}
@@ -140,7 +140,7 @@ export default function HomeClient() {
               className="hidden sm:block h-auto w-full rounded-3xl border border-white/10 shadow-2xl"
             />
             <Image
-              src="/book/bundle-tall.png"
+              src="/book/bundle-tall.webp"
               alt="The four books: Stop Waiting. Start Building., Find Your Idea, Create Your Digital Product, Teach Your Idea"
               width={900}
               height={1599}

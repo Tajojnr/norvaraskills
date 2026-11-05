@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useLanguage } from "@/lib/LanguageContext";
+import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 
 export default function Footer() {
   const { lang, t } = useLanguage();
@@ -77,7 +78,8 @@ export default function Footer() {
               rel="noopener noreferrer"
               className="inline-flex items-center space-x-2 rounded-xl bg-emerald-500/10 px-4 py-2.5 text-xs font-bold text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all"
             >
-              <span>WhatsApp: 09034111438</span>
+              <WhatsAppIcon className="h-4 w-4" />
+              <span>{lang === "en" ? "Chat on WhatsApp" : "Yi hira a WhatsApp"}</span>
             </a>
             <p className="text-[11px] text-slate-500 font-medium">
               {lang === "en" ? "*Usually responds within 24 hours." : "*Yana amsawa a cikin sa'o'i 24."}

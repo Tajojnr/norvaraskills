@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { ProductId } from "@/lib/products";
 import { useLanguage } from "@/lib/LanguageContext";
+import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 
 type Props = {
   productId: ProductId;
@@ -136,7 +137,10 @@ export default function CheckoutButtons({ productId, className = "" }: Props) {
         rel="noopener noreferrer"
         className="block w-full rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3.5 text-center text-sm font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-colors"
       >
-        {lang === "en" ? "Or order on WhatsApp 09034111438" : "Ko yi oda a WhatsApp 09034111438"}
+        <span className="inline-flex items-center justify-center gap-2">
+          <WhatsAppIcon />
+          {lang === "en" ? "Or order on WhatsApp" : "Ko yi oda a WhatsApp"}
+        </span>
       </a>
     </div>
   );

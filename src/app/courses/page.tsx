@@ -3,6 +3,7 @@
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useLanguage } from "@/lib/LanguageContext";
+import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 
 const WA_ENROLL =
   "https://wa.me/2349034111438?text=Hi%20A.%20Nova%2C%20I%20want%20to%20enroll%20in%20the%20Digital%20Product%20Masterclass%20for%20%E2%82%A619%2C500";
@@ -196,9 +197,8 @@ export default function CoursesPage() {
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-6 py-3 text-sm font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-colors"
             >
-              {lang === "en"
-                ? "Chat on WhatsApp — 09034111438"
-                : "Yi magana a WhatsApp — 09034111438"}
+              <WhatsAppIcon className="mr-2 h-4 w-4" />
+              {lang === "en" ? "Chat on WhatsApp" : "Yi magana a WhatsApp"}
             </a>
           </div>
         </div>

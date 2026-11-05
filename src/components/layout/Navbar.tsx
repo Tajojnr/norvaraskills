@@ -1,5 +1,6 @@
 "use client";
-
+import Image from "next/image";
+<Image src="/logo.webp" alt="Norvara" width={40} height={40} priority />
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Menu, X, Globe, UserCheck } from "lucide-react";
@@ -50,7 +51,7 @@ export default function Navbar() {
         <Link href="/" className="flex items-center space-x-3 group">
           <div className="relative h-10 w-10 flex items-center justify-center overflow-hidden rounded-full ring-1 ring-white/10 group-hover:ring-emerald-500/50 transition-all bg-slate-900">
             <img
-              src="/logo.png"
+              src="/logo.webp"
               alt="Norvara"
               className="h-full w-full object-contain p-0.5"
               onError={(e) => {

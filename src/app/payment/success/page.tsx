@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { useLanguage } from "@/lib/LanguageContext";
+import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 
 function SuccessInner() {
   const params = useSearchParams();
@@ -15,7 +16,7 @@ function SuccessInner() {
     <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 font-sans">
       <Link href="/" className="mb-8 flex flex-col items-center">
         <div className="h-14 w-14 overflow-hidden rounded-full ring-1 ring-white/10 bg-slate-900 mb-3">
-          <img src="/logo.png" alt="Norvara" className="h-full w-full object-contain p-1" />
+          <img src="/logo.webp" alt="Norvara" className="h-full w-full object-contain p-1" />
         </div>
         <span className="text-lg font-black tracking-tight">NORVARA</span>
       </Link>
@@ -46,7 +47,10 @@ function SuccessInner() {
           rel="noopener noreferrer"
           className="block text-xs font-semibold text-emerald-400 hover:underline"
         >
-          WhatsApp 09034111438
+          <span className="inline-flex items-center gap-1.5">
+            <WhatsAppIcon />
+            WhatsApp
+          </span>
         </a>
       </div>
     </div>

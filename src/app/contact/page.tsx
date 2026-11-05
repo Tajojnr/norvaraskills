@@ -4,6 +4,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/lib/LanguageContext";
+import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 
 export default function ContactPage() {
   const { lang } = useLanguage();
@@ -41,7 +42,10 @@ export default function ContactPage() {
               <div className="space-y-4">
                 <div>
                   <h2 className="text-2xl font-black text-white tracking-tight">Direct WhatsApp</h2>
-                  <p className="text-sm text-emerald-400 font-mono mt-1 font-bold">09034111438</p>
+                  <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-bold text-emerald-400">
+                    <WhatsAppIcon />
+                    {lang === "en" ? "Chat with us on WhatsApp" : "Yi hira da mu a WhatsApp"}
+                  </p>
                 </div>
                 <p className="text-sm text-slate-300 leading-relaxed font-medium">
                   {lang === "en"

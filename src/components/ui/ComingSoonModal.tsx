@@ -1,7 +1,8 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, MessageCircle, Construction } from "lucide-react";
+import { X, Sparkles, Construction } from "lucide-react";
+import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 
 type ComingSoonModalProps = {
   isOpen: boolean;
@@ -64,8 +65,8 @@ export default function ComingSoonModal({
                 rel="noopener noreferrer"
                 className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3.5 text-sm font-bold text-slate-950 hover:bg-emerald-400 transition-colors"
               >
-                <MessageCircle className="h-4 w-4" />
-                Order on WhatsApp — 09034111438
+                <WhatsAppIcon />
+                Order on WhatsApp
               </a>
 
               <button
