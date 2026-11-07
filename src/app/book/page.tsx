@@ -339,10 +339,23 @@ export default function BookPage() {
           <div className="price-note">{c.note}</div>
           <a className="cta-button" href={waHref} target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="mr-2 inline h-4 w-4" />Order on WhatsApp · {c.price}</a>
           <div className="cta-sub">Order directly with A. Nova · 30-day money-back guarantee</div>
-          <div className="nv-alt">
-            <a href={waInfoHref} target="_blank" rel="noopener noreferrer">Ask for more details</a>
-            {" · "}
-            <a href={waOtherOptionsHref} target="_blank" rel="noopener noreferrer">See other options</a>
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 12, marginTop: 16 }}>
+            <a
+              href={waInfoHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", border: "1px solid #1a6644", borderRadius: 8, padding: "10px 16px", color: "#1a6644", background: "#fff", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", fontSize: 14, fontWeight: 700, textDecoration: "none" }}
+            >
+              Ask for more details
+            </a>
+            <a
+              href={waOtherOptionsHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", border: "1px solid #1a6644", borderRadius: 8, padding: "10px 16px", color: "#1a6644", background: "#fff", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", fontSize: 14, fontWeight: 700, textDecoration: "none" }}
+            >
+              See other options
+            </a>
           </div>
         </div>
       </div>
