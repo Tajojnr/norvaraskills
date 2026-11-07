@@ -60,7 +60,7 @@ export default function ComingSoonModal({
               </div>
 
               <a
-                href="https://wa.me/2349034111438?text=Hi%20A.%20Nova%2C%20I%20want%20to%20buy%20and%20get%20instant%20access"
+                href="https://wa.me/2348149943489?text=Hi%20A.%20Nova%2C%20I%20want%20to%20buy%20and%20get%20instant%20access"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3.5 text-sm font-bold text-slate-950 hover:bg-emerald-400 transition-colors"

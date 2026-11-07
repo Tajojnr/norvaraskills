@@ -60,7 +60,7 @@ export default function ContactPage() {
                 </p>
 
                 <a
-                  href="https://wa.me/2349034111438?text=Hi%20A.%20Nova%2C%20I%20have%20a%20question%20regarding%20Norvara"
+                  href="https://wa.me/2348149943489?text=Hi%20A.%20Nova%2C%20I%20have%20a%20question%20regarding%20Norvara"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-6 py-4 text-sm font-bold text-slate-950 hover:bg-emerald-400 transition-colors"

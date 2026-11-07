@@ -6,13 +6,6 @@ import { useEffect, useState } from "react";
 import Footer from "@/components/layout/Footer";
 import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 
-// Flutterwave payment links, one per tier. Set these in .env.local (sandbox) and in Vercel (live links).
-const FLW_LINKS: Record<"ng" | "africa" | "intl", string | undefined> = {
-  ng: process.env.NEXT_PUBLIC_FLW_LINK_NG,
-  africa: process.env.NEXT_PUBLIC_FLW_LINK_AFRICA,
-  intl: process.env.NEXT_PUBLIC_FLW_LINK_INTL,
-};
-
 // Set to "/book/founder.webp" once the client sends the author photo (the block stays hidden until then).
 const FOUNDER_PHOTO: string | null = null;
 
@@ -30,7 +23,7 @@ const COPY: Record<Region, Record<string, string>> = {
     "million": "₦1,000,000",
     "audience": "in Nigeria",
     "daily": "around ₦5,000 to ₦10,000 a day. Later, on my good days, it was ₦50,000 and more.",
-    "note": "One payment. Pay securely by card, bank transfer or USSD.",
+    "note": "Message A. Nova on WhatsApp to place your order.",
     "faq": "No. It is written for readers everywhere, but everything works perfectly here in Nigeria. My whole business was built here."
   },
   "africa": {
@@ -39,7 +32,7 @@ const COPY: Record<Region, Record<string, string>> = {
     "best": "₦93,000 (about $69)",
     "million": "₦1,000,000 (about $740)",
     "daily": "around ₦5,000 to ₦10,000 (about $4 to $7) a day. Later, on my good days, it was ₦50,000 (about $37) and more.",
-    "note": "One payment. Pay securely by card. The price is in US dollars.",
+    "note": "Message A. Nova on WhatsApp to place your order. The price is in US dollars.",
     "audience": "across Africa",
     "faq": "No. It is written for readers everywhere. Where something depends on your country, such as payment apps, prices or ad budgets, the books tell you exactly what to check."
   },
@@ -49,7 +42,7 @@ const COPY: Record<Region, Record<string, string>> = {
     "best": "₦93,000 (about $69)",
     "million": "₦1,000,000 (about $740)",
     "daily": "around ₦5,000 to ₦10,000 (about $4 to $7) a day. Later, on my good days, it was ₦50,000 (about $37) and more.",
-    "note": "One payment. Pay securely by card. The price is in US dollars.",
+    "note": "Message A. Nova on WhatsApp to place your order. The price is in US dollars.",
     "audience": "wherever you live",
     "faq": "No. It is written for readers everywhere. My story happened in Nigeria, but the method works in any country, in your own currency. Where something depends on your country, the books tell you what to check."
   }
@@ -99,8 +92,11 @@ export default function BookPage() {
     try { localStorage.setItem("nv_region", r); } catch {}
   };
   const c = { ...COPY[region], price: TIERS[region].display } as any;
-  const link = FLW_LINKS[region];
-  const waHref = "https://wa.me/2349034111438?text=" + encodeURIComponent(`Hi A. Nova, I want the complete system (${TIERS[region].display})`);
+  const whatsapp = (message: string) =>
+    `https://wa.me/2348149943489?text=${encodeURIComponent(message)}`;
+  const waHref = whatsapp(`Hi A. Nova, I want to order the complete system for ${TIERS[region].display}. Please tell me the next steps.`);
+  const waInfoHref = whatsapp("Hi A. Nova, can you tell me more about the complete system?");
+  const waOtherOptionsHref = whatsapp("Hi A. Nova, can you tell me about other Norvara options?");
 
   return (
     <>
@@ -235,7 +231,7 @@ export default function BookPage() {
 
 
 <div className="sec">
-<div style={{textAlign:'center',margin:'10px 0 30px'}}><a className="cta-button" href="#checkout">YES, I WANT THE COMPLETE SYSTEM FOR {c.price}</a><div className="cta-sub">🔒 Secure checkout · Instant access · 30-day money-back guarantee</div></div>
+<div style={{textAlign:'center',margin:'10px 0 30px'}}><a className="cta-button" href="#checkout">YES, I WANT THE COMPLETE SYSTEM FOR {c.price}</a><div className="cta-sub">Order directly with A. Nova on WhatsApp · 30-day money-back guarantee</div></div>
 </div>
 
 
@@ -283,14 +279,14 @@ export default function BookPage() {
     <li>Book 3: Create Your Digital Product</li>
     <li>Book 4: Teach Your Idea</li>
     <li>All 10 bonus video courses</li>
-    <li>Instant access</li>
+    <li>Digital delivery after your order is confirmed</li>
     <li>30-day money-back guarantee</li>
   </ul>
   <div className="price-label">Your price today</div>
   <div className="price-new">{c.price}</div>
   <div className="price-note">{c.note}</div>
-  <a className="cta-button" href="#checkout">YES, GIVE ME INSTANT ACCESS</a>
-  <div className="cta-sub">🔒 Secure checkout · Instant access</div>
+  <a className="cta-button" href="#checkout">ORDER THE COMPLETE SYSTEM</a>
+  <div className="cta-sub">Order directly with A. Nova on WhatsApp</div>
 </div>
 </div>
 
@@ -312,7 +308,7 @@ export default function BookPage() {
 <div className="faq-q">I've never sold anything. Can I still do this?</div><div className="faq-a">Yes. The books start from finding your idea and go step by step.</div>
 <div className="faq-q">Should I choose a digital product or teaching?</div><div className="faq-a">Book 2 helps you decide. You can start with one and add the other later.</div>
 <div className="faq-q">Is this get-rich-quick?</div><div className="faq-a">No. It is real work, explained honestly. The books show you how. The results depend on what you do.</div>
-<div className="faq-q">How do I receive everything?</div><div className="faq-a">Instant access right after payment.</div>
+<div className="faq-q">How do I receive everything?</div><div className="faq-a">Message A. Nova on WhatsApp to place your order. He will guide you through the next steps and delivery.</div>
 </div>
 
 
@@ -331,7 +327,7 @@ export default function BookPage() {
   <div className="choice no"><div className="cht">Option 1: Close this page</div>Keep waiting. Hope things change on their own.</div>
   <div className="choice yes"><div className="cht">Option 2: Start today</div>Get the complete system. Find your idea. Build your income.</div>
 </div>
-<div style={{textAlign:'center',margin:'10px 0 30px'}}><a className="cta-button" href="#checkout">YES, I'M READY TO START BUILDING · {c.price}</a><div className="cta-sub">🔒 Secure checkout · Instant access · 30-day money-back guarantee</div></div>
+<div style={{textAlign:'center',margin:'10px 0 30px'}}><a className="cta-button" href="#checkout">YES, I'M READY TO START BUILDING · {c.price}</a><div className="cta-sub">Order directly with A. Nova on WhatsApp · 30-day money-back guarantee</div></div>
 </div>
 
 
@@ -341,17 +337,13 @@ export default function BookPage() {
           <div className="price-label">Your price</div>
           <div className="price-new">{c.price}</div>
           <div className="price-note">{c.note}</div>
-          {link ? (
-            <a className="cta-button" href={link} rel="noopener">Pay {c.price} securely</a>
-          ) : (
-            <a className="cta-button" href={waHref} target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="mr-2 inline h-4 w-4" />Order on WhatsApp · {c.price}</a>
-          )}
-          <div className="cta-sub">🔒 Secure checkout · Instant access · 30-day money-back guarantee</div>
-          {link && (
-            <div className="nv-alt">
-              Prefer to order by chat? <a href={waHref} target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="mr-1 inline h-4 w-4 align-text-bottom" />WhatsApp</a>
-            </div>
-          )}
+          <a className="cta-button" href={waHref} target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="mr-2 inline h-4 w-4" />Order on WhatsApp · {c.price}</a>
+          <div className="cta-sub">Order directly with A. Nova · 30-day money-back guarantee</div>
+          <div className="nv-alt">
+            <a href={waInfoHref} target="_blank" rel="noopener noreferrer">Ask for more details</a>
+            {" · "}
+            <a href={waOtherOptionsHref} target="_blank" rel="noopener noreferrer">See other options</a>
+          </div>
         </div>
       </div>
 

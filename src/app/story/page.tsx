@@ -6,9 +6,9 @@ import { motion } from "framer-motion";
 import { useLanguage } from "@/lib/LanguageContext";
 
 const WA_BOOK =
-  "https://wa.me/2349034111438?text=Hi%20A.%20Nova%2C%20I%20read%20your%20story%20and%20want%20the%20book%20for%20%E2%82%A69%2C900";
+  "https://wa.me/2348149943489?text=Hi%20A.%20Nova%2C%20I%20read%20your%20story%20and%20want%20the%20book%20for%20%E2%82%A69%2C900";
 const WA_ASK =
-  "https://wa.me/2349034111438?text=Hi%20A.%20Nova%2C%20I%20have%20a%20question%20after%20reading%20your%20story";
+  "https://wa.me/2348149943489?text=Hi%20A.%20Nova%2C%20I%20have%20a%20question%20after%20reading%20your%20story";
 
 export default function StoryPage() {
   const { lang } = useLanguage();

@@ -73,7 +73,7 @@ export default function Footer() {
                 : "Kana son oda ko kana da tambaya? Tura sakon WhatsApp kai tsaye."}
             </p>
             <a
-              href="https://wa.me/2349034111438?text=Hi%20A.%20Nova%2C%20I%20have%20a%20question%20about%20Norvara"
+              href="https://wa.me/2348149943489?text=Hi%20A.%20Nova%2C%20I%20have%20a%20question%20about%20Norvara"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center space-x-2 rounded-xl bg-emerald-500/10 px-4 py-2.5 text-xs font-bold text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all"

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 const WA_NOTIFY = (title: string) =>
-  `https://wa.me/2349034111438?text=Hi%20A.%20Nova%2C%20notify%20me%20when%20${encodeURIComponent(title)}%20launches`;
+  `https://wa.me/2348149943489?text=Hi%20A.%20Nova%2C%20notify%20me%20when%20${encodeURIComponent(title)}%20launches`;
 
 export default function ProductsPage() {
   const { lang } = useLanguage();
@@ -35,14 +35,14 @@ export default function ProductsPage() {
             "Complete story and mindset shifts",
             "Step-by-step digital product creation",
             "Mistakes to avoid so you save months",
-            "Instant automated access after payment",
+            "Order directly on WhatsApp",
             "Bonus materials for the first 40 buyers",
           ]
         : [
             "Cikakken labari da sauyin tunani",
             "Ƙirƙirar kayan dijital mataki-mataki",
             "Kuskuren da za ka gujewa don ka tsallake watanni",
-            "Samun shiga nan take bayan tabbatar da biya",
+            "Yi oda kai tsaye a WhatsApp",
             "Ƙarin kyauta ga masu saye 40 na farko",
           ],
   };
@@ -167,12 +167,12 @@ export default function ProductsPage() {
                       <div className="text-4xl font-black text-white tracking-tighter">₦9,900</div>
                       <div className="text-xs text-slate-400 font-medium mt-1">
                         {lang === "en"
-                          ? "One-time payment. Lifetime access."
+                          ? "One-time price. Lifetime access."
                           : "Biyan sau ɗaya. Mallaka har abada."}
                       </div>
                     </div>
 
-                    {/* Dual Checkout Component (Paystack + Flutterwave + WA) */}
+                    {/* WhatsApp order and product questions */}
                     <div className="w-full max-w-sm">
                       <CheckoutButtons productId="building-from-zero" />
                     </div>

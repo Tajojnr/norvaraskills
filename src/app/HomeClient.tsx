@@ -19,7 +19,7 @@ const stagger = {
 };
 
 const WA_GENERAL =
-  "https://wa.me/2349034111438?text=Hi%20A.%20Nova%2C%20I%20have%20a%20question%20about%20Norvara";
+  "https://wa.me/2348149943489?text=Hi%20A.%20Nova%2C%20I%20have%20a%20question%20about%20Norvara";
 
 // Same regional prices as /book. Display only: the real amount is always set on the server at checkout.
 type Region = "ng" | "africa" | "intl";

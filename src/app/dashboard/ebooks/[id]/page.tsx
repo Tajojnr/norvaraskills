@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useLanguage } from "@/lib/LanguageContext";
 
 const WA =
-  "https://wa.me/2349034111438?text=Hi%20A.%20Nova%2C%20I%20bought%20the%20book%20and%20I%20need%20my%20file";
+  "https://wa.me/2348149943489?text=Hi%20A.%20Nova%2C%20I%20bought%20the%20book%20and%20I%20need%20my%20file";
 
 export default function EbookAccessPage() {
   const { lang } = useLanguage();

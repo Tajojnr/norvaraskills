@@ -14,7 +14,7 @@ export async function GET(req: Request) {
     auth: { persistSession: false },
   });
 
-  const { data: ok } = await db.rpc("has_access", { p_product: "complete-system" });
+  const { data: ok } = await db.rpc("has_learning_access");
   if (!ok) return NextResponse.json({ error: "No access" }, { status: 403 });
 
   const { data: item } = await db.from("content_items").select("bunny_video_id").eq("id", id).eq("kind", "video").single();
