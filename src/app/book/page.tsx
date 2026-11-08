@@ -93,7 +93,7 @@ export default function BookPage() {
   };
   const c = { ...COPY[region], price: TIERS[region].display } as any;
   const whatsapp = (message: string) =>
-    `https://wa.me/2348149943489?text=${encodeURIComponent(message)}`;
+    `https://wa.me/2349076776905?text=${encodeURIComponent(message)}`;
   const waHref = whatsapp(`Hi A. Nova, I want to order the complete system for ${TIERS[region].display}. Please tell me the next steps.`);
   const waInfoHref = whatsapp("Hi A. Nova, can you tell me more about the complete system?");
   const waOtherOptionsHref = whatsapp("Hi A. Nova, can you tell me about other Norvara options?");

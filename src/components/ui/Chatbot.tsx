@@ -15,7 +15,7 @@ type Message = {
 type NovaMood = "idle" | "talk" | "happy";
 type NovaSize = "sm" | "md" | "lg";
 
-const WHATSAPP_PHONE = "+2348149943489";
+const WHATSAPP_PHONE = "+2349076776905";
 const WHATSAPP_HREF = `https://wa.me/${WHATSAPP_PHONE.replace(/\D/g, "")}`;
 
 // =========================================================================
@@ -131,8 +131,8 @@ const knowledgeMatrix = [
       "gaskiya ne",
     ],
     responses: {
-      en: "A. Nova (Ahmad Suleiman Baraya) is real. He shows unedited OPay screen recordings.\n\nRead My Story free, or message him on WhatsApp +2348149943489 before you spend a naira.",
-      ha: "A. Nova mutum ne na gaske. Yana nuna bidiyon OPay ba tare da gyara ba.\n\nKaranta Labarina kyauta, ko tura masa sako a WhatsApp +2348149943489 kafin ka biya.",
+      en: "A. Nova (Ahmad Suleiman Baraya) is real. He shows unedited OPay screen recordings.\n\nRead My Story free, or message him on WhatsApp +2349076776905 before you spend a naira.",
+      ha: "A. Nova mutum ne na gaske. Yana nuna bidiyon OPay ba tare da gyara ba.\n\nKaranta Labarina kyauta, ko tura masa sako a WhatsApp +2349076776905 kafin ka biya.",
     },
   },
   {
@@ -322,8 +322,8 @@ const knowledgeMatrix = [
       "yadda zan biya",
     ],
     responses: {
-      en: "Message A. Nova on WhatsApp +2348149943489 to place an order or ask about payment and delivery.",
-      ha: "Tura wa A. Nova sako a WhatsApp +2348149943489 don yin oda ko tambaya game da biya da isarwa.",
+      en: "Message A. Nova on WhatsApp +2349076776905 to place an order or ask about payment and delivery.",
+      ha: "Tura wa A. Nova sako a WhatsApp +2349076776905 don yin oda ko tambaya game da biya da isarwa.",
     },
   },
   {
@@ -358,8 +358,8 @@ const knowledgeMatrix = [
       "bidiyo",
     ],
     responses: {
-      en: "Proof is unedited OPay recordings. See My Story, or ask A. Nova on WhatsApp +2348149943489.",
-      ha: "Shaida bidiyon OPay ne ba a gyara ba. Duba Labarina, ko tambayi A. Nova a +2348149943489.",
+      en: "Proof is unedited OPay recordings. See My Story, or ask A. Nova on WhatsApp +2349076776905.",
+      ha: "Shaida bidiyon OPay ne ba a gyara ba. Duba Labarina, ko tambayi A. Nova a +2349076776905.",
     },
   },
   {
@@ -396,8 +396,8 @@ const knowledgeMatrix = [
       "kasar waje",
     ],
     responses: {
-      en: "Yes, digital products work worldwide. WhatsApp A. Nova at +2348149943489 to ask about ordering from your country.",
-      ha: "E, kayayyakin dijital suna aiki a duniya. Tura wa A. Nova sako a +2348149943489 don tambaya game da yin oda daga ƙasarka.",
+      en: "Yes, digital products work worldwide. WhatsApp A. Nova at +2349076776905 to ask about ordering from your country.",
+      ha: "E, kayayyakin dijital suna aiki a duniya. Tura wa A. Nova sako a +2349076776905 don tambaya game da yin oda daga ƙasarka.",
     },
   },
   {
@@ -425,7 +425,7 @@ const knowledgeMatrix = [
       "talk",
       "human",
       "phone number",
-      "+2348149943489",
+      "+2349076776905",
       "call",
       "support",
       "message",
@@ -434,8 +434,8 @@ const knowledgeMatrix = [
       "magana",
     ],
     responses: {
-      en: "WhatsApp A. Nova on +2348149943489. He usually replies within 24 hours.",
-      ha: "WhatsApp A. Nova a +2348149943489. Yawanci amsa cikin sa'o'i 24.",
+      en: "WhatsApp A. Nova on +2349076776905. He usually replies within 24 hours.",
+      ha: "WhatsApp A. Nova a +2349076776905. Yawanci amsa cikin sa'o'i 24.",
     },
   },
   {
@@ -495,8 +495,8 @@ function matchUserQuestion(input: string, lang: "en" | "ha"): string {
   }
 
   return lang === "en"
-    ? "I want to answer you well. Try asking:\n• Is this real?\n• How long for results?\n• How much is the book?\n\nOr WhatsApp A. Nova: +2348149943489"
-    : "Ina so in amsa da kyau. Gwada:\n• Da gaske ne?\n• Yaushe zan ga sakamako?\n• Nawa ne littafin?\n\nKo WhatsApp: +2348149943489";
+    ? "I want to answer you well. Try asking:\n• Is this real?\n• How long for results?\n• How much is the book?\n\nOr WhatsApp A. Nova: +2349076776905"
+    : "Ina so in amsa da kyau. Gwada:\n• Da gaske ne?\n• Yaushe zan ga sakamako?\n• Nawa ne littafin?\n\nKo WhatsApp: +2349076776905";
 }
 
 // =========================================================================

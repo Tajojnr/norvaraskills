@@ -42,7 +42,7 @@ function SuccessInner() {
           {lang === "en" ? "Go to Dashboard" : "Je Dakin Karatu"}
         </Link>
         <a
-          href="https://wa.me/2348149943489"
+          href="https://wa.me/2349076776905"
           target="_blank"
           rel="noopener noreferrer"
           className="block text-xs font-semibold text-emerald-400 hover:underline"

@@ -6,9 +6,9 @@ import { useLanguage } from "@/lib/LanguageContext";
 import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 
 const WA_ENROLL =
-  "https://wa.me/2348149943489?text=Hi%20A.%20Nova%2C%20I%20want%20to%20enroll%20in%20the%20Digital%20Product%20Masterclass%20for%20%E2%82%A619%2C500";
+  "https://wa.me/2349076776905?text=Hi%20A.%20Nova%2C%20I%20want%20to%20enroll%20in%20the%20Digital%20Product%20Masterclass%20for%20%E2%82%A619%2C500";
 const WA_ASK =
-  "https://wa.me/2348149943489?text=Hi%20A.%20Nova%2C%20I%20have%20a%20question%20about%20your%20courses";
+  "https://wa.me/2349076776905?text=Hi%20A.%20Nova%2C%20I%20have%20a%20question%20about%20your%20courses";
 
 export default function CoursesPage() {
   const { lang } = useLanguage();

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 const WA_NOTIFY = (title: string) =>
-  `https://wa.me/2348149943489?text=Hi%20A.%20Nova%2C%20notify%20me%20when%20${encodeURIComponent(title)}%20launches`;
+  `https://wa.me/2349076776905?text=Hi%20A.%20Nova%2C%20notify%20me%20when%20${encodeURIComponent(title)}%20launches`;
 
 export default function ProductsPage() {
   const { lang } = useLanguage();

@@ -266,7 +266,7 @@ export default function DashboardPage() {
                   <p className="mt-4 rounded-xl bg-emerald-500/5 p-3 text-xs font-semibold text-emerald-300">{L("You've completed every video lesson. Great work!", "Ka kammala duk darussan bidiyo. Madalla!")}</p>
                 )}
               </div>
-              <a href="https://wa.me/2348149943489" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-2xl border border-white/5 bg-slate-900/40 p-5 text-sm font-semibold text-slate-300 transition hover:border-emerald-500/20 hover:text-white">
+              <a href="https://wa.me/2349076776905" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-2xl border border-white/5 bg-slate-900/40 p-5 text-sm font-semibold text-slate-300 transition hover:border-emerald-500/20 hover:text-white">
                 {L("Need help with your course?", "Kana buƙatar taimako da darasinka?")} <ArrowRight className="h-4 w-4 text-emerald-400" />
               </a>
             </div>

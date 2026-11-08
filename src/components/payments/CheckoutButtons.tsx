@@ -10,7 +10,7 @@ type Props = {
   className?: string;
 };
 
-const WHATSAPP_PHONE = "2348149943489";
+const WHATSAPP_PHONE = "2349076776905";
 
 export default function CheckoutButtons({ productId, className = "" }: Props) {
   const { lang } = useLanguage();
@@ -57,7 +57,7 @@ export default function CheckoutButtons({ productId, className = "" }: Props) {
         </a>
       ))}
       <p className="text-center text-xs text-slate-400">
-        {lang === "en" ? "WhatsApp A. Nova: +234 814 994 3489" : "WhatsApp A. Nova: +234 814 994 3489"}
+        {lang === "en" ? "WhatsApp A. Nova: +234 907 677 6905" : "WhatsApp A. Nova: +234 907 677 6905"}
       </p>
     </div>
   );
