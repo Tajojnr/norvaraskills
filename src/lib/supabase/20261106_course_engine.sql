@@ -26,7 +26,7 @@ create policy "students submit own quiz attempts" on public.content_quiz_attempt
   for insert to authenticated
   with check (
     user_id = auth.uid()
-    and public.has_access('complete-system')
+    and public.has_learning_access()
     and exists (
       select 1 from public.content_items
       where id = item_id and kind = 'video'

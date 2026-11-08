@@ -31,20 +31,25 @@ export async function requireAdmin(req: NextRequest): Promise<AdminResult> {
     return { response: NextResponse.json({ error: "Your session is invalid. Sign in again." }, { status: 401 }) };
   }
 
-  const allowedEmails = (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean);
-  if (!allowedEmails.includes(user.email.toLowerCase())) {
+  const adminClient = createClient(url, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data: adminEntry, error: adminError } = await adminClient
+    .from("admin_allowlist")
+    .select("email")
+    .eq("email", user.email.toLowerCase())
+    .maybeSingle();
+  if (adminError) {
+    return { response: NextResponse.json({ error: "Could not verify admin access." }, { status: 500 }) };
+  }
+  if (!adminEntry) {
     return { response: NextResponse.json({ error: "Admin access is required." }, { status: 403 }) };
   }
 
   return {
     context: {
       user,
-      client: createClient(url, serviceRoleKey, {
-        auth: { persistSession: false, autoRefreshToken: false },
-      }),
+      client: adminClient,
     },
   };
 }

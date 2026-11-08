@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   if (!result.context) return result.response;
 
   const { client } = result.context;
-  const pendingUsers = [];
+  const signupUsers = [];
   for (let page = 1; ; page += 1) {
     const { data, error } = await client.auth.admin.listUsers({ page, perPage: USERS_PER_PAGE });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -20,27 +20,27 @@ export async function GET(req: NextRequest) {
     if (requestedUsers.length) {
       const { data: grants, error: grantsError } = await client
         .from("admin_access_grants")
-        .select("user_id")
-        .is("revoked_at", null)
+        .select("user_id, revoked_at")
         .in("user_id", requestedUsers.map((user) => user.id));
       if (grantsError) return NextResponse.json({ error: grantsError.message }, { status: 500 });
 
-      const grantedIds = new Set((grants ?? []).map((grant: { user_id: string }) => grant.user_id));
-      pendingUsers.push(...requestedUsers
-        .filter((user) => !grantedIds.has(user.id))
-        .map((user) => ({
+      const grantByUserId = new Map((grants ?? []).map((grant: { user_id: string; revoked_at: string | null }) => [grant.user_id, grant]));
+      signupUsers.push(...requestedUsers.map((user) => {
+        const grant = grantByUserId.get(user.id);
+        return {
           id: user.id,
           email: user.email,
           name: typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name : "",
           createdAt: user.created_at,
-          emailConfirmed: Boolean(user.email_confirmed_at),
-        })));
+          status: !grant ? "pending" : grant.revoked_at ? "declined" : "approved",
+        };
+      }));
     }
 
     if (data.users.length < USERS_PER_PAGE) break;
   }
 
-  return NextResponse.json({ users: pendingUsers });
+  return NextResponse.json({ users: signupUsers });
 }
 
 export async function POST(req: NextRequest) {
@@ -54,11 +54,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  if (typeof body.userId !== "string" || !USER_ID_PATTERN.test(body.userId) || !["approve", "revoke"].includes(String(body.action))) {
+  const { client, user: adminUser } = result.context;
+  if (typeof body.userId !== "string" || !USER_ID_PATTERN.test(body.userId) || !["approve", "decline"].includes(String(body.action))) {
     return NextResponse.json({ error: "Invalid access action." }, { status: 400 });
   }
 
-  const { client, user: adminUser } = result.context;
   const { data, error: userError } = await client.auth.admin.getUserById(body.userId);
   if (userError) return NextResponse.json({ error: userError.message }, { status: 500 });
   const target = data.user;
@@ -67,9 +67,6 @@ export async function POST(req: NextRequest) {
   }
 
   if (body.action === "approve") {
-    if (!target.email_confirmed_at) {
-      return NextResponse.json({ error: "The student must verify their email before approval." }, { status: 409 });
-    }
     const { error } = await client.from("admin_access_grants").upsert({
       user_id: target.id,
       granted_by: adminUser.id,
@@ -80,10 +77,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   }
 
-  const { error } = await client.from("admin_access_grants")
-    .update({ revoked_at: new Date().toISOString() })
-    .eq("user_id", target.id)
-    .is("revoked_at", null);
+  const { error } = await client.from("admin_access_grants").upsert({
+    user_id: target.id,
+    granted_by: adminUser.id,
+    granted_at: new Date().toISOString(),
+    revoked_at: new Date().toISOString(),
+  }, { onConflict: "user_id" });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }

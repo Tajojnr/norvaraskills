@@ -16,13 +16,12 @@ stable
 security definer
 set search_path = public, pg_temp
 as $$
-  select coalesce(public.has_access('complete-system'), false)
-    or exists (
-      select 1
-      from public.admin_access_grants
-      where user_id = auth.uid()
-        and revoked_at is null
-    );
+  select exists (
+    select 1
+    from public.admin_access_grants
+    where user_id = auth.uid()
+      and revoked_at is null
+  );
 $$;
 
 revoke all on function public.has_learning_access() from public, anon;

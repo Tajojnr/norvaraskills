@@ -1,49 +1,93 @@
 "use client";
 
 import Link from "next/link";
-import { useLanguage } from "@/lib/LanguageContext";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, BookOpen, LoaderCircle } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
-const WA =
-  "https://wa.me/2349076776905?text=Hi%20A.%20Nova%2C%20I%20bought%20the%20book%20and%20I%20need%20my%20file";
+export default function EbookReaderPage({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
+  const [bookId, setBookId] = useState("");
+  const [readerUrl, setReaderUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export default function EbookAccessPage() {
-  const { lang } = useLanguage();
+  useEffect(() => {
+    let active = true;
+    let objectUrl: string | null = null;
+
+    params.then(({ id }) => {
+      if (active) setBookId(id);
+    });
+
+    const loadBook = async () => {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw new Error(sessionError.message);
+      if (!session) {
+        router.replace("/login");
+        return;
+      }
+
+      const response = await fetch(`/api/books/${encodeURIComponent(bookId)}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        const result = await response.json().catch(() => null) as { error?: string } | null;
+        throw new Error(result?.error ?? "Could not open this book.");
+      }
+
+      objectUrl = URL.createObjectURL(await response.blob());
+      if (active) setReaderUrl(objectUrl);
+      else URL.revokeObjectURL(objectUrl);
+    };
+
+    if (bookId) {
+      loadBook()
+        .catch((loadError: unknown) => {
+          if (active) setError(loadError instanceof Error ? loadError.message : "Could not open this book.");
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+    }
+
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [bookId, params, router, supabase]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6 font-sans">
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-8 sm:p-10 text-center space-y-6 shadow-2xl">
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-widest text-emerald-400">
-            {lang === "en" ? "Book access" : "Sammun littafi"}
-          </p>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tighter">
-            {lang === "en" ? "Online reader coming soon" : "Dandalin karatu yana zuwa"}
-          </h1>
-          <p className="text-sm text-slate-400 font-medium leading-relaxed">
-            {lang === "en"
-              ? "The secure web reader is being connected. If you already paid, message A. Nova on WhatsApp to get your file sent directly."
-              : "Ana ci gaba da haɗa dandalin karatu. Idan ka riga ka biya, yi wa A. Nova magana a WhatsApp a turo maka fayil ɗinka."}
-          </p>
+    <main className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-4 py-4 sm:px-8">
+        <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-bold text-slate-300 hover:text-white">
+          <ArrowLeft className="h-4 w-4" /> Dashboard
+        </Link>
+        <div className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-300">
+          <BookOpen className="h-4 w-4" /> Private reader
         </div>
-
-        <a
-          href={WA}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-6 py-3.5 text-sm font-bold text-slate-950 hover:bg-emerald-400 transition-colors"
-        >
-          {lang === "en" ? "Get my file on WhatsApp" : "Karɓi fayil dina a WhatsApp"}
-        </a>
-
-        <div className="flex items-center justify-center gap-4 text-xs font-semibold text-slate-400 border-t border-white/10 pt-4">
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center justify-center rounded-xl bg-slate-800 border border-white/10 px-5 py-2.5 text-white hover:bg-slate-700 transition-colors font-bold"
-          >
-            ← {lang === "en" ? "Back to Dashboard" : "Koma Dakin Karatu"}
-          </Link>
-        </div>
-      </div>
-    </div>
+      </header>
+      <section className="flex flex-1 flex-col p-3 sm:p-6">
+        {loading ? (
+          <div className="flex flex-1 items-center justify-center text-sm font-semibold text-emerald-300">
+            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> Opening your book...
+          </div>
+        ) : error ? (
+          <div role="alert" className="m-auto max-w-lg rounded-2xl border border-rose-500/20 bg-rose-500/5 p-6 text-center text-sm text-rose-200">{error}</div>
+        ) : readerUrl ? (
+          <iframe
+            title="Book reader"
+            src={`${readerUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+            className="min-h-[75vh] flex-1 rounded-xl border border-white/10 bg-white sm:min-h-[85vh]"
+            onContextMenu={(event) => event.preventDefault()}
+          />
+        ) : (
+          <div className="m-auto text-sm text-slate-400">This book is not available.</div>
+        )}
+      </section>
+    </main>
   );
 }

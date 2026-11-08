@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/LanguageContext";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
   const { lang } = useLanguage();
+  const router = useRouter();
   const supabase = createClient();
 
   const [formData, setFormData] = useState({ fullName: "", email: "", password: "" });
@@ -19,18 +21,18 @@ export default function SignupPage() {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
       options: {
         data: { full_name: formData.fullName, access_requested: true },
-        emailRedirectTo: "https://www.norvara.com.ng/login",
       },
     });
 
     if (error) setError(error.message);
+    else if (data.session) router.replace("/dashboard");
     else setSuccess(true);
-    
+
     setLoading(false);
   };
 
@@ -61,9 +63,12 @@ export default function SignupPage() {
           <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-4 text-center">
             <p className="text-emerald-400 font-bold text-sm">
               {lang === "en" 
-                ? "Request received! Verify your email; we’ll review your access next."
-                : "An karɓi buƙatarka! Tabbatar da imel ɗinka; za mu duba damar shiga nan ba da jimawa ba."}
+                ? "Your request was received. Sign in with the password you created; an admin must approve your learning access."
+                : "An karɓi buƙatarka. Shiga da kalmar sirrin da ka ƙirƙira; admin zai amince da damar karatunka."}
             </p>
+            <Link href="/login" className="mt-4 inline-flex text-sm font-bold text-emerald-300 hover:text-emerald-200">
+              {lang === "en" ? "Go to sign in" : "Je zuwa shiga"}
+            </Link>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">

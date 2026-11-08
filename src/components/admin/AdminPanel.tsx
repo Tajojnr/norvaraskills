@@ -3,16 +3,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowDown, ArrowUp, BookOpen, Check, CircleHelp, FilePlus2, FileText, Link2, LoaderCircle, Plus, Save, Trash2, Users } from "lucide-react";
+import { ArrowDown, ArrowUp, BookOpen, Check, CircleHelp, FilePlus2, FileText, Link2, LoaderCircle, Plus, Save, Trash2, Upload, Users, X } from "lucide-react";
 
 type PendingUser = {
   id: string;
   email: string;
   name: string;
   createdAt: string;
-  emailConfirmed: boolean;
+  status: "pending" | "approved" | "declined";
 };
 
+type Book = { id: string; title: string; position: number };
 type Material = { title: string; url: string; type: string };
 type Question = { question: string; options: string[]; answer: number; explanation: string };
 type Lesson = {
@@ -49,6 +50,11 @@ export default function AdminPanel() {
   const supabase = useMemo(() => createClient(), []);
   const [users, setUsers] = useState<PendingUser[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [bookTitle, setBookTitle] = useState("");
+  const [bookFile, setBookFile] = useState<File | null>(null);
+  const [uploadingBook, setUploadingBook] = useState(false);
+  const [deletingBookId, setDeletingBookId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState("");
   const [draft, setDraft] = useState<LessonDraft>(emptyDraft);
   const [loading, setLoading] = useState(true);
@@ -57,7 +63,7 @@ export default function AdminPanel() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [tab, setTab] = useState<"users" | "lessons">("users");
+  const [tab, setTab] = useState<"users" | "books" | "lessons">("users");
 
   const loadAdminData = useCallback(async () => {
     setError(null);
@@ -68,24 +74,27 @@ export default function AdminPanel() {
       return;
     }
 
-    const headers = { Authorization: `Bearer ${session.access_token}` };
-    const [userResponse, lessonResponse] = await Promise.all([
+    const headers = { Authorization: ["Bearer", session.access_token].join(" "), "Content-Type": "application/json" };
+    const [userResponse, lessonResponse, bookResponse] = await Promise.all([
       fetch("/api/admin/users", { headers }),
       fetch("/api/admin/lessons", { headers }),
+      fetch("/api/admin/books", { headers }),
     ]);
 
-    if (userResponse.status === 403 || lessonResponse.status === 403) {
+    if (userResponse.status === 403 || lessonResponse.status === 403 || bookResponse.status === 403) {
       setIsAdmin(false);
       setLoading(false);
       return;
     }
 
-    const [userData, lessonData] = await Promise.all([
+    const [userData, lessonData, bookData] = await Promise.all([
       responseJson(userResponse),
       responseJson(lessonResponse),
+      responseJson(bookResponse),
     ]);
     setUsers(userData.users);
     setLessons(lessonData.lessons);
+    setBooks(bookData.books);
     setIsAdmin(true);
     setLoading(false);
   }, [router, supabase]);
@@ -121,7 +130,7 @@ export default function AdminPanel() {
     setNotice(null);
   };
 
-  const updateAccess = async (userId: string, action: "approve" | "revoke") => {
+  const updateAccess = async (userId: string, action: "approve" | "decline") => {
     setBusyUserId(userId);
     setError(null);
     setNotice(null);
@@ -130,15 +139,83 @@ export default function AdminPanel() {
       if (!session) throw new Error("Sign in again to continue.");
       await responseJson(await fetch("/api/admin/users", {
         method: "POST",
-        headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+        headers: { Authorization: ["Bearer", session.access_token].join(" "), "Content-Type": "application/json" },
         body: JSON.stringify({ userId, action }),
       }));
-      setNotice(action === "approve" ? "Access approved. The student can now open the dashboard." : "Access revoked.");
+      setNotice(action === "approve" ? "Access approved. The student can now open the dashboard." : "Signup declined. The account remains locked.");
       await loadAdminData();
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Could not update access.");
     } finally {
       setBusyUserId(null);
+    }
+  };
+
+  const uploadBook = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!bookFile) {
+      setError("Choose a PDF file to upload.");
+      return;
+    }
+    if (bookFile.type !== "application/pdf" || bookFile.size > 100 * 1024 * 1024) {
+      setError("Choose a PDF file smaller than 100 MB.");
+      return;
+    }
+
+    setUploadingBook(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sign in again to continue.");
+    const headers = { Authorization: ["Bearer", session.access_token].join(" "), "Content-Type": "application/json" };
+      const upload = await responseJson(await fetch("/api/admin/books", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ action: "prepare-upload" }),
+      }));
+      const { error: uploadError } = await supabase.storage.from("books")
+        .uploadToSignedUrl(upload.path, upload.token, bookFile, { contentType: "application/pdf", upsert: false });
+      if (uploadError) throw new Error(uploadError.message);
+
+      await responseJson(await fetch("/api/admin/books", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          title: bookTitle,
+          position: books.length + 1,
+          file_path: upload.path,
+        }),
+      }));
+      setNotice("Book uploaded to the private library.");
+      setBookTitle("");
+      setBookFile(null);
+      await loadAdminData();
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "Could not upload this book.");
+    } finally {
+      setUploadingBook(false);
+    }
+  };
+
+  const deleteBook = async (book: Book) => {
+    setDeletingBookId(book.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sign in again to continue.");
+      await responseJson(await fetch("/api/admin/books", {
+        method: "DELETE",
+        headers: { Authorization: ["Bearer", session.access_token].join(" "), "Content-Type": "application/json" },
+        body: JSON.stringify({ id: book.id }),
+      }));
+      setNotice(book.title + " was removed from the library.");
+      await loadAdminData();
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Could not delete this book.");
+    } finally {
+      setDeletingBookId(null);
     }
   };
 
@@ -160,7 +237,7 @@ export default function AdminPanel() {
       };
       const result = await responseJson(await fetch("/api/admin/lessons", {
         method: "POST",
-        headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+        headers: { Authorization: ["Bearer", session.access_token].join(" "), "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       }));
       setNotice(selectedId ? "Lesson updated." : "Lesson created.");
@@ -213,7 +290,10 @@ export default function AdminPanel() {
           </div>
           <div className="flex rounded-xl border border-white/10 bg-slate-900 p-1">
             <button type="button" onClick={() => setTab("users")} className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold ${tab === "users" ? "bg-emerald-500 text-slate-950" : "text-slate-400 hover:text-white"}`}>
-              <Users className="h-4 w-4" /> Access requests <span className="rounded-full bg-black/10 px-2 py-0.5 text-xs">{users.length}</span>
+              <Users className="h-4 w-4" /> Signups <span className="rounded-full bg-black/10 px-2 py-0.5 text-xs">{users.filter((user) => user.status === "pending").length}</span>
+            </button>
+            <button type="button" onClick={() => setTab("books")} className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold ${tab === "books" ? "bg-emerald-500 text-slate-950" : "text-slate-400 hover:text-white"}`}>
+              <BookOpen className="h-4 w-4" /> Books
             </button>
             <button type="button" onClick={() => setTab("lessons")} className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold ${tab === "lessons" ? "bg-emerald-500 text-slate-950" : "text-slate-400 hover:text-white"}`}>
               <BookOpen className="h-4 w-4" /> Course lessons
@@ -228,36 +308,77 @@ export default function AdminPanel() {
           <section className="space-y-4">
             <div className="flex flex-wrap items-end justify-between gap-2">
               <div>
-                <h2 className="text-xl font-bold text-white">Pending access requests</h2>
-                <p className="mt-1 text-sm text-slate-400">Only signups that requested access and have not already been approved are shown.</p>
+                <h2 className="text-xl font-bold text-white">Signup approvals</h2>
+                <p className="mt-1 text-sm text-slate-400">Review every signup. Approving grants access; declining keeps the account locked.</p>
               </div>
               <button type="button" onClick={() => loadAdminData().catch((refreshError: unknown) => setError(refreshError instanceof Error ? refreshError.message : "Could not refresh."))} className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-slate-300 hover:bg-white/5">Refresh queue</button>
             </div>
             {users.length ? (
               <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60">
-                <div className="hidden grid-cols-[1fr_1fr_160px_180px] gap-4 border-b border-white/5 px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 sm:grid">
-                  <span>Name</span><span>Email</span><span>Signup date</span><span>Action</span>
+                <div className="hidden grid-cols-[1fr_1fr_120px_120px_230px] gap-4 border-b border-white/5 px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 sm:grid">
+                  <span>Name</span><span>Email</span><span>Signup date</span><span>Status</span><span>Action</span>
                 </div>
                 {users.map((user) => (
-                  <div key={user.id} className="grid gap-3 border-b border-white/5 p-5 last:border-0 sm:grid-cols-[1fr_1fr_160px_180px] sm:items-center sm:gap-4">
-                    <div><p className="font-bold text-white">{user.name || "New student"}</p><p className="mt-1 text-xs text-slate-500">{user.emailConfirmed ? "Email verified" : "Waiting for email verification"}</p></div>
+                  <div key={user.id} className="grid gap-3 border-b border-white/5 p-5 last:border-0 sm:grid-cols-[1fr_1fr_120px_120px_230px] sm:items-center sm:gap-4">
+                    <p className="font-bold text-white">{user.name || "New student"}</p>
                     <p className="break-all text-sm text-slate-300">{user.email}</p>
                     <p className="text-xs text-slate-500">{new Date(user.createdAt).toLocaleDateString()}</p>
-                    <button
-                      type="button"
-                      disabled={!user.emailConfirmed || busyUserId === user.id}
-                      onClick={() => { void updateAccess(user.id, "approve"); }}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
-                      title={!user.emailConfirmed ? "The student must verify their signup email first." : undefined}
-                    >
-                      {busyUserId === user.id ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                      {user.emailConfirmed ? "Approve & grant access" : "Awaiting verification"}
-                    </button>
+                    <span className={`text-xs font-bold ${user.status === "approved" ? "text-emerald-400" : user.status === "declined" ? "text-rose-300" : "text-amber-300"}`}>
+                      {user.status === "approved" ? "Approved" : user.status === "declined" ? "Declined" : "Pending"}
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {user.status !== "approved" && (
+                        <button type="button" disabled={busyUserId === user.id} onClick={() => { void updateAccess(user.id, "approve"); }} className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-2.5 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:opacity-50">
+                          {busyUserId === user.id ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                          {user.status === "declined" ? "Restore access" : "Approve"}
+                        </button>
+                      )}
+                      {user.status !== "declined" && (
+                        <button type="button" disabled={busyUserId === user.id} onClick={() => { void updateAccess(user.id, "decline"); }} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-rose-500/20 px-3 py-2.5 text-xs font-bold text-rose-300 transition hover:bg-rose-500/10 disabled:opacity-50">
+                          <X className="h-4 w-4" />{user.status === "approved" ? "Revoke" : "Decline"}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
-            ) : <div className="rounded-2xl border border-dashed border-white/10 bg-slate-900/30 p-10 text-center"><Check className="mx-auto h-8 w-8 text-emerald-400" /><p className="mt-3 font-bold text-white">No pending requests</p><p className="mt-1 text-sm text-slate-500">New signups requesting access will appear here.</p></div>}
+            ) : <div className="rounded-2xl border border-dashed border-white/10 bg-slate-900/30 p-10 text-center"><Check className="mx-auto h-8 w-8 text-emerald-400" /><p className="mt-3 font-bold text-white">No signups yet</p><p className="mt-1 text-sm text-slate-500">New account requests will appear here.</p></div>}
           </section>
+        ) : tab === "books" ? (
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)]">
+            <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 sm:p-7">
+              <h2 className="text-xl font-black text-white">Private book library</h2>
+              <p className="mt-1 text-sm text-slate-400">Upload PDFs to the private storage bucket. Students with access can read them from their dashboard.</p>
+              <div className="mt-5 space-y-3">
+                {books.map((book) => (
+                  <div key={book.id} className="flex items-center gap-3 rounded-xl border border-white/5 bg-slate-950/60 p-4">
+                    <FileText className="h-5 w-5 shrink-0 text-emerald-400" />
+                    <span className="min-w-0 flex-1 truncate text-sm font-bold text-white">{book.title}</span>
+                    <button type="button" disabled={deletingBookId === book.id} onClick={() => { void deleteBook(book); }} className="rounded-lg p-2 text-rose-300 hover:bg-rose-500/10 disabled:opacity-50" aria-label={`Delete ${book.title}`}>
+                      {deletingBookId === book.id ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                    </button>
+                  </div>
+                ))}
+                {!books.length && <p className="rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-slate-500">No books uploaded yet.</p>}
+              </div>
+            </section>
+            <form onSubmit={uploadBook} className="space-y-5 rounded-2xl border border-white/10 bg-slate-900/60 p-5 sm:p-7">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Add a book</p>
+                <h2 className="mt-1 text-xl font-black text-white">Upload PDF</h2>
+              </div>
+              <label className="block space-y-2 text-xs font-bold text-slate-300">Book title
+                <input required maxLength={200} value={bookTitle} onChange={(event) => setBookTitle(event.target.value)} className="w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-sm font-medium text-white outline-none focus:border-emerald-500" placeholder="e.g. Stop Waiting. Start Building." />
+              </label>
+              <label className="block space-y-2 text-xs font-bold text-slate-300">PDF file (up to 100 MB)
+                <input required type="file" accept="application/pdf,.pdf" onChange={(event) => setBookFile(event.target.files?.[0] ?? null)} className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-3 text-sm text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-500 file:px-3 file:py-2 file:text-xs file:font-bold file:text-slate-950" />
+              </label>
+              <button type="submit" disabled={uploadingBook} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-black text-slate-950 hover:bg-emerald-400 disabled:opacity-50">
+                {uploadingBook ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                {uploadingBook ? "Uploading..." : "Upload book"}
+              </button>
+            </form>
+          </div>
         ) : (
           <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
             <aside className="rounded-2xl border border-white/10 bg-slate-900/60 p-4">

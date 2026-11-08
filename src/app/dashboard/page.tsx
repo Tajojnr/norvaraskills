@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Play, CheckCircle2, ArrowRight, Smartphone, BookOpen, Clock3, GraduationCap } from "lucide-react";
 
 type Item = { id: string; kind: "book" | "video"; title: string; position: number };
-type Access = "loading" | "yes" | "pending" | "no";
+type Access = "loading" | "yes" | "pending" | "declined" | "no";
 
 export default function DashboardPage() {
   const { lang } = useLanguage();
@@ -57,7 +57,7 @@ export default function DashboardPage() {
         return;
       }
 
-      if (hasAccess || purchases?.some((p: { status: string }) => p.status === "paid")) {
+      if (hasAccess) {
         const [{ data: rows, error: contentError }, { data: prog, error: progressError }] = await Promise.all([
           supabase.from("content_items").select("id, kind, title, position").order("position"),
           supabase.from("content_progress").select("item_id, percent"),
@@ -72,7 +72,17 @@ export default function DashboardPage() {
         setAccess("yes");
       } else {
         const recent = purchases?.some((p: { status: string; created_at: string }) => p.status === "pending" && Date.now() - new Date(p.created_at).getTime() < 60 * 60 * 1000);
-        setAccess(recent || session.user.user_metadata.access_requested === true ? "pending" : "no");
+        if (session.user.user_metadata.access_requested === true) {
+          const { data: requestStatus, error: requestStatusError } = await supabase.rpc("get_learning_access_status");
+          if (requestStatusError) {
+            setLoadError(requestStatusError.message);
+            setLoading(false);
+            return;
+          }
+          setAccess(requestStatus === "declined" ? "declined" : "pending");
+        } else {
+          setAccess(recent ? "pending" : "no");
+        }
       }
       setLoading(false);
     };
@@ -174,10 +184,22 @@ export default function DashboardPage() {
                   </h2>
                   <p className="text-sm text-slate-400 font-medium">
                     {user?.user_metadata?.access_requested === true
-                      ? L("We’ll grant course and book access after approving your request. Please verify your signup email if you haven’t already.", "Za mu buɗe darussa da littattafai bayan mun amince da buƙatarka. Tabbatar da imel ɗinka idan ba ka riga ka yi ba.")
+                      ? L("An admin will review your signup. Refresh this page after your request is approved.", "Admin zai duba rajistarka. Sake sabunta wannan shafi bayan an amince da buƙatarka.")
                       : L("This usually takes under a minute. Refresh this page in a moment.", "Yawanci bai wuce minti ɗaya ba. Sake buɗe wannan shafi.")}
                   </p>
                   <button onClick={() => window.location.reload()} className="rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-bold text-slate-950 hover:bg-amber-400">{L("Refresh", "Sake buɗewa")}</button>
+                </div>
+              )}
+
+              {access === "declined" && (
+                <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-6 space-y-3">
+                  <h2 className="text-lg font-bold text-white">{L("Your access request was declined", "An ƙi buƙatar samun damar karatunka")}</h2>
+                  <p className="text-sm text-slate-400 font-medium">
+                    {L("Your account is still active, but learning content remains locked. Contact us on WhatsApp if you think this was a mistake.", "Asusunka yana aiki amma an kulle kayan karatu. Tuntube mu a WhatsApp idan kana ganin an yi kuskure.")}
+                  </p>
+                  <a href="https://wa.me/2349076776905" target="_blank" rel="noopener noreferrer" className="inline-flex rounded-xl bg-emerald-500 px-5 py-2.5 text-xs font-bold text-slate-950 hover:bg-emerald-400">
+                    WhatsApp support
+                  </a>
                 </div>
               )}
 
