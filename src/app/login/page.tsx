@@ -12,6 +12,7 @@ export default function LoginPage() {
   const supabase = createClient();
 
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [role, setRole] = useState<"student" | "admin">("student");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,6 +59,22 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label htmlFor="login-role" className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Sign in as</label>
+            <select
+              id="login-role"
+              value={role}
+              onChange={(event) => {
+                const nextRole = event.target.value === "admin" ? "admin" : "student";
+                setRole(nextRole);
+                if (nextRole === "admin") router.push("/admin/login");
+              }}
+              className="w-full rounded-xl border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-emerald-500"
+            >
+              <option value="student">Student</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
           {error && (
             <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-3 text-rose-400 text-xs font-bold text-center">
               {error}
@@ -100,6 +117,12 @@ export default function LoginPage() {
               : (lang === "en" ? "Sign In" : "Shiga")}
           </button>
         </form>
+        <p className="mt-5 text-center text-xs text-slate-500">
+          Administrator?{" "}
+          <Link href="/admin/login" className="font-bold text-emerald-400 hover:text-emerald-300">
+            Admin sign in
+          </Link>
+        </p>
       </div>
     </div>
   );

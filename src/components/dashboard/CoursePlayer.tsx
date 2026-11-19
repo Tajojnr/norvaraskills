@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, BookOpen, Check, CheckCircle2, CircleHelp, Download, FileText, LockKeyhole, Play, RotateCcw } from "lucide-react";
@@ -39,9 +40,12 @@ type QuizAttempt = {
 };
 
 type CourseItem = Lesson & {
+  kind: "video" | "audio";
   video_url: string | null;
   summary: string | null;
   materials: unknown;
+  audio_path: string | null;
+  image_path: string | null;
 };
 
 function parseMaterials(value: unknown): Material[] {
@@ -72,6 +76,8 @@ export default function CoursePlayer({ id }: { id: string }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [item, setItem] = useState<CourseItem | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [progressByLesson, setProgressByLesson] = useState<Record<string, number>>({});
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -106,8 +112,8 @@ export default function CoursePlayer({ id }: { id: string }) {
       }
 
       const [{ data: current, error: itemError }, { data: lessonRows, error: lessonsError }, { data: progressRows, error: progressError }, { data: attempts, error: attemptsError }] = await Promise.all([
-        supabase.from("content_items").select("id, kind, title, position, video_url, summary, materials").eq("id", id).eq("kind", "video").maybeSingle(),
-        supabase.from("content_items").select("id, title, position").eq("kind", "video").order("position"),
+        supabase.from("content_items").select("id, kind, title, position, video_url, summary, materials, audio_path, image_path").eq("id", id).in("kind", ["video", "audio"]).maybeSingle(),
+        supabase.from("content_items").select("id, kind, title, position").in("kind", ["video", "audio"]).order("position"),
         supabase.from("content_progress").select("item_id, percent"),
         supabase.from("content_quiz_attempts").select("score, total, created_at").eq("item_id", id).order("created_at", { ascending: false }).limit(1),
       ]);
@@ -127,6 +133,30 @@ export default function CoursePlayer({ id }: { id: string }) {
         return;
       }
 
+      const courseItem = current as CourseItem;
+      let nextAudioUrl: string | null = null;
+      let nextImageUrl: string | null = null;
+      if (courseItem.kind === "audio") {
+        if (!courseItem.audio_path) {
+          setError(lang === "en" ? "This audio lesson has no recording yet." : "Wannan darasin sauti ba shi da rikodi tukuna.");
+          setLoading(false);
+          return;
+        }
+        const [{ data: audioFile, error: audioError }, imageResult] = await Promise.all([
+          supabase.storage.from("audio-lessons").createSignedUrl(courseItem.audio_path, 86400),
+          courseItem.image_path
+            ? supabase.storage.from("audio-lessons").createSignedUrl(courseItem.image_path, 86400)
+            : Promise.resolve({ data: null, error: null }),
+        ]);
+        if (audioError || imageResult.error) {
+          setError(audioError?.message ?? imageResult.error?.message ?? (lang === "en" ? "Could not load this audio lesson." : "Ba a iya loda wannan darasin sauti ba."));
+          setLoading(false);
+          return;
+        }
+        nextAudioUrl = audioFile.signedUrl;
+        nextImageUrl = imageResult.data?.signedUrl ?? null;
+      }
+
       const progressMap = Object.fromEntries((progressRows ?? []).map((row: { item_id: string; percent: number }) => [row.item_id, row.percent]));
       const savedPercent = Math.max(0, Math.min(100, Number(progressMap[id] ?? 0)));
       progressRef.current = savedPercent;
@@ -135,8 +165,16 @@ export default function CoursePlayer({ id }: { id: string }) {
       setProgressByLesson(progressMap);
       setUserId(session.user.id);
       setAccessToken(session.access_token);
-      setItem(current as CourseItem);
-      setLessons((lessonRows ?? []) as Lesson[]);
+      setItem(courseItem);
+      setAudioUrl(nextAudioUrl);
+      setImageUrl(nextImageUrl);
+      setLessons((lessonRows ?? [])
+        .filter((lesson: { kind: string }) => lesson.kind === courseItem.kind)
+        .map((lesson: { id: string; title: string; position: number }) => ({
+          id: lesson.id,
+          title: lesson.title,
+          position: lesson.position,
+        })));
       setAttempt((attempts?.[0] as QuizAttempt | undefined) ?? null);
       setQuestions([]);
       setQuizLoadedFor("");
@@ -186,7 +224,7 @@ export default function CoursePlayer({ id }: { id: string }) {
   const next = lessonIndex >= 0 && lessonIndex < lessons.length - 1 ? lessons[lessonIndex + 1] : null;
 
   useEffect(() => {
-    if (!completed || !accessToken || quizLoadedFor === id) return;
+    if (item?.kind !== "video" || !completed || !accessToken || quizLoadedFor === id) return;
     let active = true;
     const loadQuiz = async () => {
       await Promise.resolve();
@@ -210,7 +248,7 @@ export default function CoursePlayer({ id }: { id: string }) {
     };
     void loadQuiz();
     return () => { active = false; };
-  }, [accessToken, completed, id, quizLoadedFor]);
+  }, [accessToken, completed, id, item?.kind, quizLoadedFor]);
 
   const submitQuiz = async () => {
     if (!accessToken || !questions.length || Object.keys(answers).length !== questions.length) return;
@@ -268,9 +306,33 @@ export default function CoursePlayer({ id }: { id: string }) {
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="min-w-0 space-y-8">
             <section>
-              <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">{L("Video lesson", "Darasin bidiyo")}</p>
+              <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">{item.kind === "audio" ? L("Audio lesson", "Darasin sauti") : L("Video lesson", "Darasin bidiyo")}</p>
               <h1 className="mb-5 text-2xl font-black tracking-tight text-white sm:text-3xl">{item.title}</h1>
-              {videoId ? (
+              {item.kind === "audio" ? (
+                <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900">
+                  {imageUrl && <Image src={imageUrl} alt="" width={1200} height={675} unoptimized className="max-h-[28rem] w-full object-cover" />}
+                  <div className="p-5 sm:p-7">
+                    <audio
+                      controls
+                      preload="metadata"
+                      src={audioUrl ?? undefined}
+                      className="w-full"
+                      onLoadedMetadata={(event) => {
+                        const audio = event.currentTarget;
+                        if (audio.duration && progressRef.current > 0 && progressRef.current < 100) {
+                          audio.currentTime = audio.duration * progressRef.current / 100;
+                        }
+                      }}
+                      onTimeUpdate={(event) => {
+                        const audio = event.currentTarget;
+                        if (audio.duration) void saveProgress(Math.floor(audio.currentTime / audio.duration * 100));
+                      }}
+                      onEnded={() => { void saveProgress(100); }}
+                      onError={() => setPlayerError(true)}
+                    />
+                  </div>
+                </div>
+              ) : videoId ? (
                 <YouTubePlayer
                   videoId={videoId}
                   onProgress={(percent) => { void saveProgress(percent); }}
@@ -288,7 +350,7 @@ export default function CoursePlayer({ id }: { id: string }) {
                   </p>
                 </div>
               )}
-              {playerError && <p role="alert" className="mt-3 text-sm text-rose-400">{L("The video could not be loaded. Check the link and try again.", "Ba a iya kunna bidiyon ba. Duba hanyar sannan ka sake gwadawa.")}</p>}
+              {playerError && <p role="alert" className="mt-3 text-sm text-rose-400">{item.kind === "audio" ? L("The audio could not be loaded. Please try again later.", "Ba a iya kunna sautin ba. Sake gwadawa daga baya.") : L("The video could not be loaded. Check the link and try again.", "Ba a iya kunna bidiyon ba. Duba hanyar sannan ka sake gwadawa.")}</p>}
               {savingError && <p role="alert" className="mt-3 text-sm text-rose-400">{L("Progress could not be saved:", "Ba a iya adana ci gaba ba:")} {savingError}</p>}
               {completed && (
                 <div className="mt-4 flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm">
@@ -303,7 +365,7 @@ export default function CoursePlayer({ id }: { id: string }) {
                 <span className="rounded-xl bg-sky-500/10 p-2.5 text-sky-300"><BookOpen className="h-5 w-5" /></span>
                 <div>
                   <h2 className="font-bold text-white">{L("Lesson materials", "Kayan darasi")}</h2>
-                  <p className="text-xs text-slate-400">{L("Helpful resources for this video", "Abubuwan taimako na wannan bidiyo")}</p>
+                  <p className="text-xs text-slate-400">{item.kind === "audio" ? L("Helpful resources for this audio lesson", "Abubuwan taimako na wannan darasin sauti") : L("Helpful resources for this video", "Abubuwan taimako na wannan bidiyo")}</p>
                 </div>
               </div>
               {materials.length ? (
@@ -322,6 +384,18 @@ export default function CoursePlayer({ id }: { id: string }) {
               ) : <p className="rounded-xl border border-dashed border-white/10 px-4 py-5 text-sm text-slate-500">{L("Lesson resources will appear here.", "Kayan darasin za su bayyana a nan.")}</p>}
             </section>
 
+            {item.kind === "audio" ? (
+              <section className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-slate-900/60 p-5 sm:p-6">
+                <div className="mb-4 flex items-center gap-3">
+                  <span className="rounded-xl bg-emerald-500/10 p-2.5 text-emerald-300"><BookOpen className="h-5 w-5" /></span>
+                  <div>
+                    <h2 className="font-bold text-white">{L("Explanation & lesson notes", "Bayani da bayanan darasi")}</h2>
+                    <p className="text-xs text-slate-400">{L("Review the key ideas for this audio lesson", "Duba muhimman abubuwan wannan darasin sauti")}</p>
+                  </div>
+                </div>
+                <p className="whitespace-pre-line text-sm leading-7 text-slate-300">{item.summary || L("No extra notes for this lesson.", "Babu ƙarin bayani game da wannan darasi.")}</p>
+              </section>
+            ) : (
             <section className={`rounded-2xl border p-5 sm:p-6 ${completed ? "border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-slate-900/60" : "border-white/10 bg-slate-900/40"}`}>
               <div className="mb-4 flex items-center gap-3">
                 <span className={`rounded-xl p-2.5 ${completed ? "bg-emerald-500/10 text-emerald-300" : "bg-slate-800 text-slate-500"}`}>
@@ -336,8 +410,9 @@ export default function CoursePlayer({ id }: { id: string }) {
                 <p className="whitespace-pre-line text-sm leading-7 text-slate-300">{item.summary || L("A summary for this lesson will be added soon.", "Za a saka taƙaitaccen wannan darasi nan ba da jimawa ba.")}</p>
               ) : <p className="text-sm text-slate-500">{L("Finish watching the video to reveal the summary and optional quiz.", "Kammala kallon bidiyon domin buɗe taƙaitawa da tambayoyi na zaɓi.")}</p>}
             </section>
+            )}
 
-            <section className={`rounded-2xl border p-5 sm:p-6 ${completed ? "border-white/10 bg-slate-900/60" : "border-white/5 bg-slate-900/30 opacity-75"}`}>
+            {item.kind === "video" && <section className={`rounded-2xl border p-5 sm:p-6 ${completed ? "border-white/10 bg-slate-900/60" : "border-white/5 bg-slate-900/30 opacity-75"}`}>
               <div className="mb-5 flex items-center gap-3">
                 <span className={`rounded-xl p-2.5 ${completed ? "bg-violet-500/10 text-violet-300" : "bg-slate-800 text-slate-500"}`}><CircleHelp className="h-5 w-5" /></span>
                 <div>
@@ -403,7 +478,7 @@ export default function CoursePlayer({ id }: { id: string }) {
                   </div>
                 </div>
               ) : <p className="rounded-xl border border-dashed border-white/10 px-4 py-5 text-sm text-slate-500">{L("The quiz for this lesson will be added soon.", "Za a saka tambayoyin wannan darasi nan ba da jimawa ba.")}</p>}
-            </section>
+            </section>}
 
             {error && <p role="alert" className="text-sm text-rose-400">{error}</p>}
 

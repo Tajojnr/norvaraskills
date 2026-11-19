@@ -10,7 +10,7 @@ import { useLanguage } from "@/lib/LanguageContext";
 import { createClient } from "@/lib/supabase/client";
 import { Play, CheckCircle2, ArrowRight, Smartphone, BookOpen, Clock3, GraduationCap } from "lucide-react";
 
-type Item = { id: string; kind: "book" | "video"; title: string; position: number };
+type Item = { id: string; kind: "book" | "video" | "audio"; title: string; position: number };
 type Access = "loading" | "yes" | "pending" | "declined" | "no";
 
 export default function DashboardPage() {
@@ -100,11 +100,13 @@ export default function DashboardPage() {
 
   const books = items.filter((i) => i.kind === "book");
   const videos = items.filter((i) => i.kind === "video");
-  const completedLessons = videos.filter((video) => (progress[video.id] ?? 0) >= 100).length;
-  const activeLessons = videos.filter((video) => (progress[video.id] ?? 0) > 0 && (progress[video.id] ?? 0) < 100).length;
-  const courseProgress = videos.length ? Math.round(videos.reduce((sum, video) => sum + (progress[video.id] ?? 0), 0) / videos.length) : 0;
-  const nextLesson = videos.find((video) => (progress[video.id] ?? 0) > 0 && (progress[video.id] ?? 0) < 100)
-    ?? videos.find((video) => (progress[video.id] ?? 0) < 100);
+  const audios = items.filter((i) => i.kind === "audio");
+  const courseLessons = items.filter((i) => i.kind === "video" || i.kind === "audio");
+  const completedLessons = courseLessons.filter((lesson) => (progress[lesson.id] ?? 0) >= 100).length;
+  const activeLessons = courseLessons.filter((lesson) => (progress[lesson.id] ?? 0) > 0 && (progress[lesson.id] ?? 0) < 100).length;
+  const courseProgress = courseLessons.length ? Math.round(courseLessons.reduce((sum, lesson) => sum + (progress[lesson.id] ?? 0), 0) / courseLessons.length) : 0;
+  const nextLesson = courseLessons.find((lesson) => (progress[lesson.id] ?? 0) > 0 && (progress[lesson.id] ?? 0) < 100)
+    ?? courseLessons.find((lesson) => (progress[lesson.id] ?? 0) < 100);
 
   const Row = ({ item }: { item: Item }) => {
     const pct = progress[item.id] ?? 0;
@@ -223,7 +225,7 @@ export default function DashboardPage() {
                       <div>
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">{L("Your learning journey", "Tafiyar koyonka")}</p>
                         <h2 className="mt-2 text-xl font-black tracking-tight text-white sm:text-2xl">{L("Keep building momentum", "Ci gaba da samun nasara")}</h2>
-                        <p className="mt-2 text-sm text-slate-400">{L(`${completedLessons} of ${videos.length} video lessons completed`, `An kammala darussa ${completedLessons} cikin ${videos.length}`)}</p>
+                        <p className="mt-2 text-sm text-slate-400">{L(`${completedLessons} of ${courseLessons.length} course lessons completed`, `An kammala darussa ${completedLessons} cikin ${courseLessons.length}`)}</p>
                       </div>
                       {nextLesson && (
                         <Link href={`/dashboard/courses/${nextLesson.id}`} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-bold text-slate-950 shadow-lg shadow-emerald-950/30 transition hover:bg-emerald-400">
@@ -253,6 +255,15 @@ export default function DashboardPage() {
                     </div>
                     {videos.length ? <div className="grid gap-4">{videos.map((v) => <Row key={v.id} item={v} />)}</div> : (
                       <p className="rounded-2xl border border-dashed border-white/10 p-5 text-sm text-slate-500">{L("Your video lessons will appear here.", "Darussan bidiyoyinka za su bayyana a nan.")}</p>
+                    )}
+                  </div>
+                  <div>
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <h2 className="text-lg font-bold text-white">{L("My Audio Course", "Darussan Sauti")}</h2>
+                      <span className="text-xs font-semibold text-slate-500">{audios.length} {L("lessons", "darussa")}</span>
+                    </div>
+                    {audios.length ? <div className="grid gap-4">{audios.map((audio) => <Row key={audio.id} item={audio} />)}</div> : (
+                      <p className="rounded-2xl border border-dashed border-white/10 p-5 text-sm text-slate-500">{L("Your audio lessons will appear here.", "Darussan sautinka za su bayyana a nan.")}</p>
                     )}
                   </div>
                 </>

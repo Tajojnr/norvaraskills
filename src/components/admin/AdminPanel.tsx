@@ -14,6 +14,14 @@ type PendingUser = {
 };
 
 type Book = { id: string; title: string; position: number };
+type AudioLesson = {
+  id: string;
+  title: string;
+  position: number;
+  summary: string | null;
+  audio_path: string;
+  image_path: string | null;
+};
 type Material = { title: string; url: string; type: string };
 type Question = { question: string; options: string[]; answer: number; explanation: string };
 type Lesson = {
@@ -39,6 +47,10 @@ const emptyDraft = (): LessonDraft => ({
   quiz: [],
 });
 
+type AudioLessonDraft = { title: string; position: number; summary: string };
+const AUDIO_MIME_TYPES = ["audio/mpeg", "audio/mp4", "audio/aac", "audio/ogg", "audio/wav", "audio/webm"];
+const IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
 async function responseJson(response: Response) {
   const result = await response.json();
   if (!response.ok) throw new Error(result.error ?? "The request could not be completed.");
@@ -50,11 +62,18 @@ export default function AdminPanel() {
   const supabase = useMemo(() => createClient(), []);
   const [users, setUsers] = useState<PendingUser[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [audioLessons, setAudioLessons] = useState<AudioLesson[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [bookTitle, setBookTitle] = useState("");
   const [bookFile, setBookFile] = useState<File | null>(null);
   const [uploadingBook, setUploadingBook] = useState(false);
   const [deletingBookId, setDeletingBookId] = useState<string | null>(null);
+  const [audioDraft, setAudioDraft] = useState<AudioLessonDraft>({ title: "", position: 1, summary: "" });
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [selectedAudioId, setSelectedAudioId] = useState("");
+  const [savingAudio, setSavingAudio] = useState(false);
+  const [deletingAudioId, setDeletingAudioId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState("");
   const [draft, setDraft] = useState<LessonDraft>(emptyDraft);
   const [loading, setLoading] = useState(true);
@@ -63,38 +82,41 @@ export default function AdminPanel() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [tab, setTab] = useState<"users" | "books" | "lessons">("users");
+  const [tab, setTab] = useState<"users" | "books" | "audio" | "lessons">("users");
 
   const loadAdminData = useCallback(async () => {
     setError(null);
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     if (sessionError) throw new Error(sessionError.message);
     if (!session) {
-      router.push("/login");
+      router.push("/admin/login");
       return;
     }
 
     const headers = { Authorization: ["Bearer", session.access_token].join(" "), "Content-Type": "application/json" };
-    const [userResponse, lessonResponse, bookResponse] = await Promise.all([
+    const [userResponse, lessonResponse, bookResponse, audioResponse] = await Promise.all([
       fetch("/api/admin/users", { headers }),
       fetch("/api/admin/lessons", { headers }),
       fetch("/api/admin/books", { headers }),
+      fetch("/api/admin/audio-lessons", { headers }),
     ]);
 
-    if (userResponse.status === 403 || lessonResponse.status === 403 || bookResponse.status === 403) {
+    if ([userResponse, lessonResponse, bookResponse, audioResponse].some((response) => response.status === 403)) {
       setIsAdmin(false);
       setLoading(false);
       return;
     }
 
-    const [userData, lessonData, bookData] = await Promise.all([
+    const [userData, lessonData, bookData, audioData] = await Promise.all([
       responseJson(userResponse),
       responseJson(lessonResponse),
       responseJson(bookResponse),
+      responseJson(audioResponse),
     ]);
     setUsers(userData.users);
     setLessons(lessonData.lessons);
     setBooks(bookData.books);
+    setAudioLessons(audioData.lessons);
     setIsAdmin(true);
     setLoading(false);
   }, [router, supabase]);
@@ -219,6 +241,114 @@ export default function AdminPanel() {
     }
   };
 
+  const chooseAudioLesson = (lesson: AudioLesson) => {
+    setSelectedAudioId(lesson.id);
+    setAudioDraft({
+      title: lesson.title,
+      position: lesson.position,
+      summary: lesson.summary ?? "",
+    });
+    setAudioFile(null);
+    setImageFile(null);
+    setError(null);
+    setNotice(null);
+  };
+
+  const startNewAudioLesson = () => {
+    setSelectedAudioId("");
+    setAudioDraft({ title: "", position: audioLessons.length + 1, summary: "" });
+    setAudioFile(null);
+    setImageFile(null);
+    setError(null);
+    setNotice(null);
+  };
+
+  const saveAudioLesson = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!selectedAudioId && !audioFile) {
+      setError("Choose an audio file for this lesson.");
+      return;
+    }
+    if (audioFile && (!AUDIO_MIME_TYPES.includes(audioFile.type) || audioFile.size > 100 * 1024 * 1024)) {
+      setError("Choose an MP3, M4A, AAC, OGG, WAV, or WebM audio file smaller than 100 MB.");
+      return;
+    }
+    if (imageFile && (!IMAGE_MIME_TYPES.includes(imageFile.type) || imageFile.size > 10 * 1024 * 1024)) {
+      setError("Choose a JPG, PNG, or WebP image smaller than 10 MB.");
+      return;
+    }
+
+    setSavingAudio(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sign in again to continue.");
+      const headers = { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" };
+      const uploadFile = async (file: File, fileType: "audio" | "image") => {
+        const upload = await responseJson(await fetch("/api/admin/audio-lessons", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ action: "prepare-upload", file_type: fileType, mime_type: file.type }),
+        }));
+        if (typeof upload.path !== "string" || typeof upload.token !== "string") {
+          throw new Error("The audio upload could not be prepared.");
+        }
+        const { error: uploadError } = await supabase.storage.from("audio-lessons")
+          .uploadToSignedUrl(upload.path, upload.token, file, { contentType: file.type, upsert: false });
+        if (uploadError) throw new Error(uploadError.message);
+        return upload.path;
+      };
+
+      const audioPath = audioFile ? await uploadFile(audioFile, "audio") : undefined;
+      const imagePath = imageFile ? await uploadFile(imageFile, "image") : undefined;
+      const payload = {
+        ...audioDraft,
+        id: selectedAudioId || undefined,
+        summary: audioDraft.summary.trim(),
+        ...(audioPath ? { audio_path: audioPath } : {}),
+        ...(imagePath ? { image_path: imagePath } : {}),
+      };
+      const result = await responseJson(await fetch("/api/admin/audio-lessons", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+      }));
+      if (typeof result.id !== "string") throw new Error("The audio lesson was not saved correctly.");
+      setNotice(typeof result.warning === "string" ? result.warning : selectedAudioId ? "Audio lesson updated." : "Audio lesson created.");
+      setAudioFile(null);
+      setImageFile(null);
+      await loadAdminData();
+      setSelectedAudioId(result.id);
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Could not save this audio lesson.");
+    } finally {
+      setSavingAudio(false);
+    }
+  };
+
+  const deleteAudioLesson = async (lesson: AudioLesson) => {
+    setDeletingAudioId(lesson.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sign in again to continue.");
+      await responseJson(await fetch("/api/admin/audio-lessons", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ id: lesson.id }),
+      }));
+      setNotice(`${lesson.title} was removed from the audio course.`);
+      if (selectedAudioId === lesson.id) startNewAudioLesson();
+      await loadAdminData();
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Could not delete this audio lesson.");
+    } finally {
+      setDeletingAudioId(null);
+    }
+  };
+
   const saveLesson = async (event: React.FormEvent) => {
     event.preventDefault();
     setSaving(true);
@@ -294,6 +424,9 @@ export default function AdminPanel() {
             </button>
             <button type="button" onClick={() => setTab("books")} className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold ${tab === "books" ? "bg-emerald-500 text-slate-950" : "text-slate-400 hover:text-white"}`}>
               <BookOpen className="h-4 w-4" /> Books
+            </button>
+            <button type="button" onClick={() => setTab("audio")} className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold ${tab === "audio" ? "bg-emerald-500 text-slate-950" : "text-slate-400 hover:text-white"}`}>
+              <BookOpen className="h-4 w-4" /> Audio course
             </button>
             <button type="button" onClick={() => setTab("lessons")} className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold ${tab === "lessons" ? "bg-emerald-500 text-slate-950" : "text-slate-400 hover:text-white"}`}>
               <BookOpen className="h-4 w-4" /> Course lessons
@@ -376,6 +509,65 @@ export default function AdminPanel() {
               <button type="submit" disabled={uploadingBook} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-black text-slate-950 hover:bg-emerald-400 disabled:opacity-50">
                 {uploadingBook ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                 {uploadingBook ? "Uploading..." : "Upload book"}
+              </button>
+            </form>
+          </div>
+        ) : tab === "audio" ? (
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+            <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 sm:p-7">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-black text-white">Audio course lessons</h2>
+                  <p className="mt-1 text-sm text-slate-400">Build the course by adding numbered audio lessons.</p>
+                </div>
+                <button type="button" onClick={startNewAudioLesson} className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-black text-slate-950"><Plus className="h-3.5 w-3.5" /> Add lesson</button>
+              </div>
+              <div className="mt-5 space-y-2">
+                {audioLessons.map((lesson) => (
+                  <div key={lesson.id} className={`flex items-center gap-3 rounded-xl border p-3 ${selectedAudioId === lesson.id ? "border-emerald-500/30 bg-emerald-500/5" : "border-white/5 bg-slate-950/50"}`}>
+                    <button type="button" onClick={() => chooseAudioLesson(lesson)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-800 text-xs font-bold text-emerald-300">{lesson.position}</span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-bold text-white">{lesson.title}</span>
+                        <span className="text-xs text-slate-500">{lesson.image_path ? "Cover image added" : "No cover image"}</span>
+                      </span>
+                    </button>
+                    <button type="button" disabled={deletingAudioId === lesson.id} onClick={() => { void deleteAudioLesson(lesson); }} className="rounded-lg p-2 text-rose-300 hover:bg-rose-500/10 disabled:opacity-50" aria-label={`Delete ${lesson.title}`}>
+                      {deletingAudioId === lesson.id ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                    </button>
+                  </div>
+                ))}
+                {!audioLessons.length && <p className="rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-slate-500">No audio lessons yet. Add the first lesson to start your course.</p>}
+              </div>
+            </section>
+
+            <form key={selectedAudioId || "new-audio-lesson"} onSubmit={saveAudioLesson} className="space-y-5 rounded-2xl border border-white/10 bg-slate-900/60 p-5 sm:p-7">
+              <div className="border-b border-white/5 pb-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">{selectedAudioId ? "Edit audio lesson" : "Add to audio course"}</p>
+                <h2 className="mt-1 text-xl font-black text-white">{audioDraft.title || "Lesson details"}</h2>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
+                <label className="space-y-2 text-xs font-bold text-slate-300">Lesson title
+                  <input required maxLength={200} value={audioDraft.title} onChange={(event) => setAudioDraft({ ...audioDraft, title: event.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-sm font-medium text-white outline-none focus:border-emerald-500" placeholder="e.g. Finding your first customers" />
+                </label>
+                <label className="space-y-2 text-xs font-bold text-slate-300">Lesson number
+                  <input required type="number" min={1} step={1} value={audioDraft.position} onChange={(event) => setAudioDraft({ ...audioDraft, position: Number(event.target.value) })} className="w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-sm font-medium text-white outline-none focus:border-emerald-500" />
+                </label>
+              </div>
+              <label className="block space-y-2 text-xs font-bold text-slate-300">Audio file (up to 100 MB)
+                <input key={audioFile?.name ?? selectedAudioId} required={!selectedAudioId} type="file" accept="audio/mpeg,audio/mp4,audio/aac,audio/ogg,audio/wav,audio/webm,.mp3,.m4a,.aac,.ogg,.wav,.webm" onChange={(event) => setAudioFile(event.target.files?.[0] ?? null)} className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-3 text-sm text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-500 file:px-3 file:py-2 file:text-xs file:font-bold file:text-slate-950" />
+                <span className="block font-normal text-slate-500">{selectedAudioId ? "Leave empty to keep the current recording." : "Supported: MP3, M4A, AAC, OGG, WAV, or WebM."}</span>
+              </label>
+              <label className="block space-y-2 text-xs font-bold text-slate-300">Optional lesson image (up to 10 MB)
+                <input key={imageFile?.name ?? `${selectedAudioId}-image`} type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" onChange={(event) => setImageFile(event.target.files?.[0] ?? null)} className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-3 text-sm text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-700 file:px-3 file:py-2 file:text-xs file:font-bold file:text-white" />
+                <span className="block font-normal text-slate-500">{selectedAudioId ? "Choose an image to replace the current one." : "Add a JPG, PNG, or WebP cover image."}</span>
+              </label>
+              <label className="block space-y-2 text-xs font-bold text-slate-300">Explanation or lesson notes
+                <textarea rows={7} maxLength={20000} value={audioDraft.summary} onChange={(event) => setAudioDraft({ ...audioDraft, summary: event.target.value })} className="w-full resize-y rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-sm font-medium leading-6 text-white outline-none focus:border-emerald-500" placeholder="Add an explanation, key ideas, or notes for learners..." />
+              </label>
+              <button type="submit" disabled={savingAudio} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-black text-slate-950 hover:bg-emerald-400 disabled:opacity-50">
+                {savingAudio ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                {savingAudio ? "Saving audio lesson..." : selectedAudioId ? "Save changes" : "Upload audio lesson"}
               </button>
             </form>
           </div>
